@@ -1,0 +1,77 @@
+{
+  "name": "cajapro",
+  "version": "0.6.0",
+  "description": "Software de gestión para comercios de barrio",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev:vite": "vite",
+    "dev:electron": "electron .",
+    "dev": "node scripts/dev.cjs",
+    "build": "vite build",
+    "package": "npm run build && set CSC_IDENTITY_AUTO_DISCOVERY=false && npx electron-builder --win --publish never",
+    "preview": "vite preview"
+  },
+  "keywords": ["pos", "inventario", "comercio", "gestion"],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@afipsdk/afip.js": "^1.2.3",
+    "@hookform/resolvers": "^5.4.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "lucide-react": "^1.18.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.79.0",
+    "react-router-dom": "^7.17.0",
+    "ws": "^8.21.0",
+    "xlsx": "^0.18.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "playwright-core": "^1.60.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.10",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.cajapro.app",
+    "productName": "CajaPro",
+    "copyright": "2025 CajaPro",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [{"target": "nsis", "arch": ["x64"]}],
+      "artifactName": "CajaPro-Instalador-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "CajaPro",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "license": null
+    },
+    "mac": {"icon": "build/icon.png", "target": "dmg"},
+    "linux": {"icon": "build/icon.png", "target": "AppImage"}
+  }
+}

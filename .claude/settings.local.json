@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(New-Item *)",
+      "PowerShell(Get-Process *)",
+      "Skill(run)",
+      "PowerShell(Get-ChildItem C:\\\\Users\\\\nicol\\\\Proyectos\\\\AutomatizacionesAR\\\\src -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object FullName)",
+      "PowerShell(Start-Sleep -Seconds 5; Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 3 | Select-Object -ExpandProperty StatusCode)",
+      "PowerShell(cd \"C:\\\\Users\\\\nicol\\\\Proyectos\\\\AutomatizacionesAR\"; Start-Process -NoNewWindow -FilePath \"npx\" -ArgumentList \"vite\",\"--port\",\"5173\" -PassThru | Select-Object Id; Start-Sleep -Seconds 6; try { \\(Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 5\\).StatusCode } catch { \"No responde aun\" })",
+      "PowerShell(cd \"C:\\\\Users\\\\nicol\\\\Proyectos\\\\AutomatizacionesAR\"; $env:CSC_IDENTITY_AUTO_DISCOVERY = \"false\"; npx electron-builder --win 2>&1)"
+    ]
+  }
+}

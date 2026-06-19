@@ -1,0 +1,33 @@
+# Variables de entorno — nunca subir al repo
+.env
+.env.local
+.env.*.local
+
+# Dependencias
+node_modules/
+
+# Builds de Vite
+dist/
+dist-ssr/
+
+# Builds de Electron
+dist-electron/
+release/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+
+export function useStockAlertas() {
+  const [alertas, setAlertas] = useState([])
+  const [cargando, setCargando] = useState(true)
+
+  useEffect(() => { cargar() }, [])
+
+  async function cargar() {
+    const { data } = await supabase
+      .from('productos')
+      .select('id, nombre, stock_actual, stock_minimo, unidad, categorias(nombre)')
+      .eq('activo', true)
+      .order('stock_actual')
+
+    const filtradas = (data ?? []).filter(p =>
+      Number(p.stock_actual) <= 0 ||
+      (Number(p.stock_minimo) > 0 && Number(p.stock_actual) <= Number(p.stock_minimo))
+    )
+    setAlertas(filtradas)
+    setCargando(false)
+  }
+
+  // Sin stock primero, luego bajo stock ordenado por stock_actual asc
+  const sinStock  = alertas.filter(p => Number(p.stock_actual) <= 0)
+  const bajoStock = alertas.filter(p => Number(p.stock_actual) > 0)
+
+  return { alertas, sinStock, bajoStock, cargando }
+}

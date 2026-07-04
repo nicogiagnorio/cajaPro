@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!-- deploy: 1783206924152 -->
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CajaPro — Confirmación</title>
+  <title>CajaPro â ConfirmaciÃ³n</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
@@ -49,7 +50,7 @@
 </head>
 <body>
   <div class="card">
-    <div class="logo"><div class="logo-icon">🏪</div><span class="logo-text">CajaPro</span></div>
+    <div class="logo"><div class="logo-icon">ðª</div><span class="logo-text">CajaPro</span></div>
     <div id="contenido"></div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>
@@ -90,25 +91,25 @@
     }
 
     function mostrarCargando() {
-      contenido.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><p style="margin:0;color:#64748b">Verificando link…</p></div>'
+      contenido.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><p style="margin:0;color:#64748b">Verificando linkâ¦</p></div>'
     }
 
     function mostrarExpirado() {
-      contenido.innerHTML = '<div class="badge badge-error">Link inválido</div><div class="estado-icon">❌</div><h1>El link no es válido</h1><p>Este link <strong>expiró</strong> o ya fue utilizado.</p><div class="instruccion"><p>Volvé a la app y solicitá un nuevo link de recuperación.</p><p style="margin-top:6px">Los links son válidos durante 60 minutos.</p></div>'
+      contenido.innerHTML = '<div class="badge badge-error">Link invÃ¡lido</div><div class="estado-icon">â</div><h1>El link no es vÃ¡lido</h1><p>Este link <strong>expirÃ³</strong> o ya fue utilizado.</p><div class="instruccion"><p>VolvÃ© a la app y solicitÃ¡ un nuevo link de recuperaciÃ³n.</p><p style="margin-top:6px">Los links son vÃ¡lidos durante 60 minutos.</p></div>'
     }
 
     function mostrarSignupOk() {
-      contenido.innerHTML = '<div class="badge badge-success">Cuenta verificada</div><div class="estado-icon">✅</div><h1>¡Email confirmado!</h1><p>Tu cuenta fue verificada correctamente.</p><p>Ya podés <strong>iniciar sesión en CajaPro</strong> desde tu computadora.</p><div class="instruccion"><p>Abrí CajaPro y usá tu email y contraseña para ingresar.</p></div><p style="margin-top:20px;font-size:14px;color:#64748b">¿Todavía no lo instalaste?</p><a class="btn-download" href="https://github.com/nicogiagnorio/cajaPro/releases/latest">Descargar CajaPro</a><hr class="divider" /><p class="cierre">Podés cerrar esta pestaña.</p>'
+      contenido.innerHTML = '<div class="badge badge-success">Cuenta verificada</div><div class="estado-icon">â</div><h1>Â¡Email confirmado!</h1><p>Tu cuenta fue verificada correctamente.</p><p>Ya podÃ©s <strong>iniciar sesiÃ³n en CajaPro</strong> desde tu computadora.</p><div class="instruccion"><p>AbrÃ­ CajaPro y usÃ¡ tu email y contraseÃ±a para ingresar.</p></div><p style="margin-top:20px;font-size:14px;color:#64748b">Â¿TodavÃ­a no lo instalaste?</p><a class="btn-download" href="https://github.com/nicogiagnorio/cajaPro/releases/latest">Descargar CajaPro</a><hr class="divider" /><p class="cierre">PodÃ©s cerrar esta pestaÃ±a.</p>'
     }
 
     function mostrarFormPassword() {
-      contenido.innerHTML = '<div class="badge badge-info">Nueva contraseña</div><div class="estado-icon">🔐</div><h1>Creá tu nueva contraseña</h1><p>Ingresá la nueva contraseña para tu cuenta de CajaPro.</p><form id="form-pass" class="form" autocomplete="off"><div class="input-wrap"><input type="password" id="p1" placeholder="Nueva contraseña (mín. 8 caracteres)" autocomplete="new-password" /><button type="button" class="toggle-pass" data-target="p1">👁</button></div><div class="strength-bar"><div class="strength-fill" id="sfill"></div></div><div class="strength-label" id="slabel"></div><div class="input-wrap"><input type="password" id="p2" placeholder="Repetí la contraseña" autocomplete="new-password" /><button type="button" class="toggle-pass" data-target="p2">👁</button></div><div class="form-error" id="ferr"></div><button type="submit" class="btn-submit" id="bsub">Cambiar contraseña</button></form>'
+      contenido.innerHTML = '<div class="badge badge-info">Nueva contraseÃ±a</div><div class="estado-icon">ð</div><h1>CreÃ¡ tu nueva contraseÃ±a</h1><p>IngresÃ¡ la nueva contraseÃ±a para tu cuenta de CajaPro.</p><form id="form-pass" class="form" autocomplete="off"><div class="input-wrap"><input type="password" id="p1" placeholder="Nueva contraseÃ±a (mÃ­n. 8 caracteres)" autocomplete="new-password" /><button type="button" class="toggle-pass" data-target="p1">ð</button></div><div class="strength-bar"><div class="strength-fill" id="sfill"></div></div><div class="strength-label" id="slabel"></div><div class="input-wrap"><input type="password" id="p2" placeholder="RepetÃ­ la contraseÃ±a" autocomplete="new-password" /><button type="button" class="toggle-pass" data-target="p2">ð</button></div><div class="form-error" id="ferr"></div><button type="submit" class="btn-submit" id="bsub">Cambiar contraseÃ±a</button></form>'
 
       document.querySelectorAll('.toggle-pass').forEach(btn => {
         btn.addEventListener('click', () => {
           const inp = document.getElementById(btn.dataset.target)
           inp.type = inp.type === 'password' ? 'text' : 'password'
-          btn.textContent = inp.type === 'password' ? '👁' : '🙈'
+          btn.textContent = inp.type === 'password' ? 'ð' : 'ð'
         })
       })
 
@@ -118,7 +119,7 @@
         const label = document.getElementById('slabel')
         if (!val) { fill.style.width = '0'; label.textContent = ''; return }
         const score = [val.length>=8, val.length>=12, /[A-Z]/.test(val), /[0-9]/.test(val), /[^A-Za-z0-9]/.test(val)].filter(Boolean).length
-        const niveles = [{pct:'20%',color:'#ef4444',text:'Muy débil'},{pct:'40%',color:'#f97316',text:'Débil'},{pct:'60%',color:'#eab308',text:'Regular'},{pct:'80%',color:'#22c55e',text:'Fuerte'},{pct:'100%',color:'#4ade80',text:'Muy fuerte'}]
+        const niveles = [{pct:'20%',color:'#ef4444',text:'Muy dÃ©bil'},{pct:'40%',color:'#f97316',text:'DÃ©bil'},{pct:'60%',color:'#eab308',text:'Regular'},{pct:'80%',color:'#22c55e',text:'Fuerte'},{pct:'100%',color:'#4ade80',text:'Muy fuerte'}]
         const n = niveles[Math.min(Math.max(score-1,0),4)]
         fill.style.width=n.pct; fill.style.background=n.color; label.textContent=n.text; label.style.color=n.color
       })
@@ -128,17 +129,17 @@
         const p1=document.getElementById('p1').value, p2=document.getElementById('p2').value
         const err=document.getElementById('ferr'), btn=document.getElementById('bsub')
         err.classList.remove('visible')
-        if (p1.length<8) { err.textContent='La contraseña debe tener al menos 8 caracteres.'; err.classList.add('visible'); return }
-        if (p1!==p2) { err.textContent='Las contraseñas no coinciden.'; err.classList.add('visible'); return }
-        btn.textContent='Guardando…'; btn.disabled=true
+        if (p1.length<8) { err.textContent='La contraseÃ±a debe tener al menos 8 caracteres.'; err.classList.add('visible'); return }
+        if (p1!==p2) { err.textContent='Las contraseÃ±as no coinciden.'; err.classList.add('visible'); return }
+        btn.textContent='Guardandoâ¦'; btn.disabled=true
         const { error: e2 } = await client.auth.updateUser({ password: p1 })
-        if (e2) { err.textContent='No se pudo cambiar la contraseña. El link puede haber expirado.'; err.classList.add('visible'); btn.textContent='Cambiar contraseña'; btn.disabled=false; return }
+        if (e2) { err.textContent='No se pudo cambiar la contraseÃ±a. El link puede haber expirado.'; err.classList.add('visible'); btn.textContent='Cambiar contraseÃ±a'; btn.disabled=false; return }
         mostrarPasswordOk()
       })
     }
 
     function mostrarPasswordOk() {
-      contenido.innerHTML = '<div class="badge badge-success">¡Listo!</div><div class="estado-icon">✅</div><h1>Contraseña actualizada</h1><p>Tu contraseña fue cambiada correctamente.</p><div class="instruccion"><p>Abrí CajaPro e ingresá con tu email y tu nueva contraseña.</p></div><hr class="divider" /><p class="cierre">Podés cerrar esta pestaña.</p>'
+      contenido.innerHTML = '<div class="badge badge-success">Â¡Listo!</div><div class="estado-icon">â</div><h1>ContraseÃ±a actualizada</h1><p>Tu contraseÃ±a fue cambiada correctamente.</p><div class="instruccion"><p>AbrÃ­ CajaPro e ingresÃ¡ con tu email y tu nueva contraseÃ±a.</p></div><hr class="divider" /><p class="cierre">PodÃ©s cerrar esta pestaÃ±a.</p>'
     }
 
     init()

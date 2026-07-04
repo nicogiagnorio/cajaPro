@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CajaPro — Confirmación de cuenta</title>
+  <title>CajaPro — Confirmación</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
-    .card { background: #1e293b; border-radius: 20px; padding: 48px 40px; max-width: 480px; width: 100%; text-align: center; border: 1px solid #334155; }
+    .card { background: #1e293b; border-radius: 20px; padding: 48px 40px; max-width: 440px; width: 100%; text-align: center; border: 1px solid #334155; }
     .logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 36px; }
     .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #6366f1); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
     .logo-text { font-size: 22px; font-weight: 700; color: #f8fafc; letter-spacing: -0.3px; }
@@ -21,11 +21,29 @@
     .btn-download:hover { background: #2563eb; }
     .badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 99px; margin-bottom: 20px; letter-spacing: 0.3px; }
     .badge-success { background: #14532d; color: #4ade80; }
-    .badge-error { background: #450a0a; color: #f87171; }
-    .badge-info { background: #1e3a5f; color: #60a5fa; }
+    .badge-error   { background: #450a0a; color: #f87171; }
+    .badge-info    { background: #1e3a5f; color: #60a5fa; }
     .instruccion { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 16px 20px; margin-top: 20px; text-align: left; }
     .instruccion p { font-size: 14px; color: #94a3b8; margin: 0; }
     .instruccion p + p { margin-top: 6px; }
+    .spinner-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .form { margin-top: 28px; text-align: left; }
+    .input-wrap { position: relative; margin-bottom: 14px; }
+    .input-wrap input { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px 44px 12px 14px; font-size: 15px; color: #f8fafc; outline: none; transition: border-color 0.15s; }
+    .input-wrap input:focus { border-color: #3b82f6; }
+    .input-wrap input::placeholder { color: #475569; }
+    .toggle-pass { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #64748b; padding: 2px; line-height: 1; font-size: 16px; }
+    .toggle-pass:hover { color: #94a3b8; }
+    .strength-bar { height: 4px; border-radius: 99px; background: #334155; margin: -8px 0 10px; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 99px; width: 0; transition: width 0.3s, background 0.3s; }
+    .strength-label { font-size: 12px; color: #64748b; margin-bottom: 14px; text-align: right; }
+    .form-error { background: #450a0a; border: 1px solid #7f1d1d; color: #fca5a5; font-size: 13px; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; display: none; }
+    .form-error.visible { display: block; }
+    .btn-submit { width: 100%; background: #3b82f6; color: #fff; font-size: 15px; font-weight: 600; padding: 13px; border-radius: 10px; border: none; cursor: pointer; transition: background 0.2s, opacity 0.2s; }
+    .btn-submit:hover:not(:disabled) { background: #2563eb; }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
     @media (max-width: 480px) { .card { padding: 36px 24px; } h1 { font-size: 20px; } }
   </style>
 </head>
@@ -34,23 +52,96 @@
     <div class="logo"><div class="logo-icon">🏪</div><span class="logo-text">CajaPro</span></div>
     <div id="contenido"></div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>
   <script>
-    const params = new URLSearchParams(window.location.search)
-    const hash = new URLSearchParams(window.location.hash.replace('#', '?'))
-    const type = params.get('type') || hash.get('type')
-    const accessToken = params.get('access_token') || hash.get('access_token')
-    const error = params.get('error') || hash.get('error')
-    const errorCode = params.get('error_code') || hash.get('error_code')
+    const SUPABASE_URL  = 'https://ttqztzybaozsodjjnlzb.supabase.co'
+    const SUPABASE_ANON = 'sb_publishable_zFb48ek98kIzYulDu7umLA_vlb9f5Ja'
+    const { createClient } = window.supabase
+    const client = createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { detectSessionInUrl: false, persistSession: false } })
     const contenido = document.getElementById('contenido')
-    if (error || errorCode) {
-      contenido.innerHTML = '<div class="badge badge-error">Link inválido</div><div class="estado-icon">❌</div><h1>El link no es válido</h1><p>Este link de confirmación <strong>expiró</strong> o ya fue usado anteriormente.</p><div class="instruccion"><p>Abrí CajaPro e intentá registrarte nuevamente para recibir un nuevo link.</p><p>Si el problema persiste, contactá al soporte de CajaPro.</p></div>'
-    } else if (type === 'recovery') {
-      contenido.innerHTML = '<div class="badge badge-info">Recuperación de contraseña</div><div class="estado-icon">🔐</div><h1>Link de recuperación recibido</h1><p>Para recuperar el acceso a CajaPro, contactá al administrador del sistema para que te asigne una nueva contraseña.</p><div class="instruccion"><p>Una vez que tengas tu nueva contraseña, abrí CajaPro e ingresá normalmente con tu email y contraseña.</p></div><hr class="divider" /><p class="cierre">Podés cerrar esta pestaña.</p>'
-    } else if (type === 'signup' || type === 'email' || accessToken) {
-      contenido.innerHTML = '<div class="badge badge-success">Cuenta verificada</div><div class="estado-icon">✅</div><h1>¡Email confirmado!</h1><p>Tu cuenta fue verificada correctamente.</p><p>Ya podés <strong>iniciar sesión en CajaPro</strong> desde tu computadora.</p><div class="instruccion"><p>Si CajaPro ya está instalado, abrilo y usá tu email y contraseña para ingresar.</p></div><p style="margin-top:20px;font-size:14px;color:#64748b;">¿Todavía no lo instalaste?</p><a class="btn-download" href="https://github.com/nicogiagnorio/cajaPro/releases/latest">Descargar CajaPro</a><hr class="divider" /><p class="cierre">Podés cerrar esta pestaña.</p>'
-    } else {
-      contenido.innerHTML = '<div class="badge badge-error">Link inválido</div><div class="estado-icon">❌</div><h1>El link no es válido</h1><p>Este link de confirmación <strong>expiró</strong> o ya fue usado anteriormente.</p><div class="instruccion"><p>Abrí CajaPro e intentá registrarte nuevamente para recibir un nuevo link.</p><p>Si el problema persiste, contactá al soporte de CajaPro.</p></div>'
+    const qp = new URLSearchParams(window.location.search)
+    const hp = new URLSearchParams(window.location.hash.replace('#', '?'))
+    const type        = qp.get('type')         || hp.get('type')
+    const tokenHash   = qp.get('token_hash')
+    const accessToken = hp.get('access_token')
+    const refreshTok  = hp.get('refresh_token') || ''
+    const error       = qp.get('error')         || hp.get('error')
+    const errorCode   = qp.get('error_code')    || hp.get('error_code')
+
+    async function init() {
+      if (error || errorCode) { mostrarExpirado(); return }
+      if (tokenHash && type) {
+        mostrarCargando()
+        const { error: e } = await client.auth.verifyOtp({ token_hash: tokenHash, type })
+        if (e) { mostrarExpirado(); return }
+        type === 'recovery' ? mostrarFormPassword() : mostrarSignupOk()
+        return
+      }
+      if (accessToken) {
+        if (type === 'recovery') {
+          mostrarCargando()
+          const { error: e } = await client.auth.setSession({ access_token: accessToken, refresh_token: refreshTok })
+          if (e) { mostrarExpirado(); return }
+          mostrarFormPassword()
+        } else { mostrarSignupOk() }
+        return
+      }
+      mostrarExpirado()
     }
-  </script>
+
+    function mostrarCargando() {
+      contenido.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><p style="margin:0;color:#64748b">Verificando link…</p></div>'
+    }
+
+    function mostrarExpirado() {
+      contenido.innerHTML = '<div class="badge badge-error">Link inválido</div><div class="estado-icon">❌</div><h1>El link no es válido</h1><p>Este link <strong>expiró</strong> o ya fue utilizado.</p><div class="instruccion"><p>Volvé a la app y solicitá un nuevo link de recuperación.</p><p style="margin-top:6px">Los links son válidos durante 60 minutos.</p></div>'
+    }
+
+    function mostrarSignupOk() {
+      contenido.innerHTML = '<div class="badge badge-success">Cuenta verificada</div><div class="estado-icon">✅</div><h1>¡Email confirmado!</h1><p>Tu cuenta fue verificada correctamente.</p><p>Ya podés <strong>iniciar sesión en CajaPro</strong> desde tu computadora.</p><div class="instruccion"><p>Abrí CajaPro y usá tu email y contraseña para ingresar.</p></div><p style="margin-top:20px;font-size:14px;color:#64748b">¿Todavía no lo instalaste?</p><a class="btn-download" href="https://github.com/nicogiagnorio/cajaPro/releases/latest">Descargar CajaPro</a><hr class="divider" /><p class="cierre">Podés cerrar esta pestaña.</p>'
+    }
+
+    function mostrarFormPassword() {
+      contenido.innerHTML = '<div class="badge badge-info">Nueva contraseña</div><div class="estado-icon">🔐</div><h1>Creá tu nueva contraseña</h1><p>Ingresá la nueva contraseña para tu cuenta de CajaPro.</p><form id="form-pass" class="form" autocomplete="off"><div class="input-wrap"><input type="password" id="p1" placeholder="Nueva contraseña (mín. 8 caracteres)" autocomplete="new-password" /><button type="button" class="toggle-pass" data-target="p1">👁</button></div><div class="strength-bar"><div class="strength-fill" id="sfill"></div></div><div class="strength-label" id="slabel"></div><div class="input-wrap"><input type="password" id="p2" placeholder="Repetí la contraseña" autocomplete="new-password" /><button type="button" class="toggle-pass" data-target="p2">👁</button></div><div class="form-error" id="ferr"></div><button type="submit" class="btn-submit" id="bsub">Cambiar contraseña</button></form>'
+
+      document.querySelectorAll('.toggle-pass').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const inp = document.getElementById(btn.dataset.target)
+          inp.type = inp.type === 'password' ? 'text' : 'password'
+          btn.textContent = inp.type === 'password' ? '👁' : '🙈'
+        })
+      })
+
+      document.getElementById('p1').addEventListener('input', () => {
+        const val = document.getElementById('p1').value
+        const fill = document.getElementById('sfill')
+        const label = document.getElementById('slabel')
+        if (!val) { fill.style.width = '0'; label.textContent = ''; return }
+        const score = [val.length>=8, val.length>=12, /[A-Z]/.test(val), /[0-9]/.test(val), /[^A-Za-z0-9]/.test(val)].filter(Boolean).length
+        const niveles = [{pct:'20%',color:'#ef4444',text:'Muy débil'},{pct:'40%',color:'#f97316',text:'Débil'},{pct:'60%',color:'#eab308',text:'Regular'},{pct:'80%',color:'#22c55e',text:'Fuerte'},{pct:'100%',color:'#4ade80',text:'Muy fuerte'}]
+        const n = niveles[Math.min(Math.max(score-1,0),4)]
+        fill.style.width=n.pct; fill.style.background=n.color; label.textContent=n.text; label.style.color=n.color
+      })
+
+      document.getElementById('form-pass').addEventListener('submit', async e => {
+        e.preventDefault()
+        const p1=document.getElementById('p1').value, p2=document.getElementById('p2').value
+        const err=document.getElementById('ferr'), btn=document.getElementById('bsub')
+        err.classList.remove('visible')
+        if (p1.length<8) { err.textContent='La contraseña debe tener al menos 8 caracteres.'; err.classList.add('visible'); return }
+        if (p1!==p2) { err.textContent='Las contraseñas no coinciden.'; err.classList.add('visible'); return }
+        btn.textContent='Guardando…'; btn.disabled=true
+        const { error: e2 } = await client.auth.updateUser({ password: p1 })
+        if (e2) { err.textContent='No se pudo cambiar la contraseña. El link puede haber expirado.'; err.classList.add('visible'); btn.textContent='Cambiar contraseña'; btn.disabled=false; return }
+        mostrarPasswordOk()
+      })
+    }
+
+    function mostrarPasswordOk() {
+      contenido.innerHTML = '<div class="badge badge-success">¡Listo!</div><div class="estado-icon">✅</div><h1>Contraseña actualizada</h1><p>Tu contraseña fue cambiada correctamente.</p><div class="instruccion"><p>Abrí CajaPro e ingresá con tu email y tu nueva contraseña.</p></div><hr class="divider" /><p class="cierre">Podés cerrar esta pestaña.</p>'
+    }
+
+    init()
+  <\/script>
 </body>
 </html>

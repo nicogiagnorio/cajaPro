@@ -56,8 +56,8 @@ export default function CompraRapida() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('categorias').select('id, nombre').eq('activo', true).order('nombre'),
-      supabase.from('proveedores').select('id, nombre').eq('activo', true).order('nombre'),
+      supabase.from('categorias').select('id, nombre').eq('comercio_id', perfil.comercio_id).eq('activo', true).order('nombre'),
+      supabase.from('proveedores').select('id, nombre').eq('comercio_id', perfil.comercio_id).eq('activo', true).order('nombre'),
     ]).then(([{ data: cats }, { data: provs }]) => {
       setCategorias(cats   ?? [])
       setProveedores(provs ?? [])

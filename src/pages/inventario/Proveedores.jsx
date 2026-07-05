@@ -35,7 +35,7 @@ export default function Proveedores() {
 
   async function cargar() {
     setCargando(true)
-    const { data } = await supabase.from('proveedores').select('*').order('nombre')
+    const { data } = await supabase.from('proveedores').select('*').eq('comercio_id', perfil.comercio_id).order('nombre')
     setProveedores(data ?? [])
     setCargando(false)
   }

@@ -40,6 +40,7 @@ export default function VentaRapida() {
     supabase
       .from('categorias')
       .select('id, nombre')
+      .eq('comercio_id', perfil.comercio_id)
       .eq('activo', true)
       .order('nombre')
       .then(({ data }) => setCategorias(data ?? []))
@@ -47,6 +48,7 @@ export default function VentaRapida() {
     supabase
       .from('clientes')
       .select('id, nombre')
+      .eq('comercio_id', perfil.comercio_id)
       .eq('activo', true)
       .order('nombre')
       .then(({ data }) => setClientes(data ?? []))

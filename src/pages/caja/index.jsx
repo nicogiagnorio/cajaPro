@@ -42,6 +42,7 @@ export default function Caja() {
     const { data: ventas } = await supabase
       .from('ventas')
       .select('total, metodo_pago')
+      .eq('comercio_id', caja.comercio_id)
       .eq('estado', 'completada')
       .gte('fecha', caja.fecha_apertura)
     const r = { efectivo: 0, tarjeta_debito: 0, tarjeta_credito: 0, transferencia: 0, otro: 0, total: 0, cantidad: 0 }
@@ -60,12 +61,14 @@ export default function Caja() {
       supabase
         .from('cierres_caja')
         .select('*')
+        .eq('comercio_id', perfil.comercio_id)
         .eq('estado', 'abierto')
         .order('fecha_apertura', { ascending: false })
         .limit(1),
       supabase
         .from('cierres_caja')
         .select('id, fecha_apertura, fecha_cierre, fondo_inicial, total_ventas, cantidad_ventas, efectivo_contado, diferencia')
+        .eq('comercio_id', perfil.comercio_id)
         .eq('estado', 'cerrado')
         .order('fecha_cierre', { ascending: false })
         .limit(15),

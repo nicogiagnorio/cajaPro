@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron')
+const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const fs   = require('fs')
 
@@ -16,6 +17,7 @@ function crearVentana() {
     minWidth:  960,
     minHeight: 620,
     title:    'CajaPro',
+    icon:     path.join(__dirname, '..', 'build', 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: {
       preload:          path.join(__dirname, 'preload.cjs'),
@@ -50,6 +52,8 @@ app.whenReady().then(() => {
   registrarHandlersGoogleCal()
   registrarHandlersAdmin()
   crearVentana()
+  const ventana = BrowserWindow.getAllWindows()[0]
+  configurarAutoUpdater(ventana)
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) crearVentana()
   })
@@ -421,4 +425,183 @@ function registrarHandlersAdmin() {
       return { ok: false, error: err.message }
     }
   })
+
+  // Eliminar usuario (tabla usuarios + Supabase Auth)
+  ipcMain.handle('admin:eliminar-usuario', async (_e, { id, authUserId }) => {
+    const { ok, client, error } = getAdminMod().getAdminClient()
+    if (!ok) return { ok: false, error }
+    try {
+      // 1. Eliminar de la tabla usuarios
+      const { error: tablaErr } = await client.from('usuarios').delete().eq('id', id)
+      if (tablaErr) return { ok: false, error: tablaErr.message }
+      // 2. Eliminar de Auth (si tiene cuenta)
+      if (authUserId) {
+        const { error: authErr } = await client.auth.admin.deleteUser(authUserId)
+        if (authErr) return { ok: false, error: authErr.message }
+      }
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  // Eliminar comercio (y todos sus usuarios — tabla + Supabase Auth)
+  ipcMain.handle('admin:eliminar-comercio', async (_e, comercioId) => {
+    const { ok, client, error } = getAdminMod().getAdminClient()
+    if (!ok) return { ok: false, error }
+    try {
+      // 1. Obtener todos los usuarios del comercio
+      const { data: usuarios, error: listErr } = await client
+        .from('usuarios')
+        .select('id, auth_user_id')
+        .eq('comercio_id', comercioId)
+      if (listErr) return { ok: false, error: listErr.message }
+
+      // 2. Eliminar cada usuario de Supabase Auth (ignorar errores individuales)
+      const authIds = (usuarios ?? []).filter(u => u.auth_user_id).map(u => u.auth_user_id)
+      for (const authId of authIds) {
+        await client.auth.admin.deleteUser(authId)
+      }
+
+      // 3. Eliminar usuarios de la tabla
+      if ((usuarios ?? []).length > 0) {
+        const { error: usersErr } = await client.from('usuarios').delete().eq('comercio_id', comercioId)
+        if (usersErr) return { ok: false, error: usersErr.message }
+      }
+
+      // 4. Eliminar el comercio
+      const { error: comercioErr } = await client.from('comercios').delete().eq('id', comercioId)
+      if (comercioErr) return { ok: false, error: comercioErr.message }
+
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  // ── Email: confirmación de pago a comercio ────────────────────
+  ipcMain.handle('admin:enviar-confirmacion-pago', async (_e, datos) => {
+    const gmailUser = process.env.GMAIL_USER
+    const gmailPass = process.env.GMAIL_APP_PASSWORD
+    if (!gmailUser || !gmailPass) {
+      return { ok: false, error: 'GMAIL_USER o GMAIL_APP_PASSWORD no configurados en .env' }
+    }
+    if (!datos.comercioEmail) {
+      return { ok: false, error: 'El comercio no tiene email registrado' }
+    }
+
+    const { comercioNombre, comercioEmail, tipo, monto, fechaPago, medioPago, comprobante } = datos
+    const montoFmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(monto)
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px">
+        <tr><td style="padding-bottom:24px" align="center">
+          <span style="font-size:20px;font-weight:700;color:#0f172a">CajaPro</span>
+        </td></tr>
+        <tr><td style="background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+          <div style="height:4px;background:linear-gradient(90deg,#7c3aed,#a855f7)"></div>
+          <div style="padding:36px 40px">
+            <div style="margin-bottom:24px">
+              <span style="display:inline-block;background:#f0fdf4;color:#16a34a;font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px">✓ Pago confirmado</span>
+            </div>
+            <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#0f172a">Hola, ${comercioNombre}</p>
+            <p style="margin:0 0 32px;font-size:15px;color:#64748b">Registramos el siguiente pago en tu cuenta.</p>
+            <div style="background:#faf5ff;border:1px solid #ede9fe;border-radius:14px;padding:20px 24px;margin-bottom:28px;text-align:center">
+              <p style="margin:0 0 4px;font-size:12px;font-weight:600;color:#7c3aed;text-transform:uppercase">${tipo}</p>
+              <p style="margin:0;font-size:36px;font-weight:800;color:#6d28d9">${montoFmt}</p>
+            </div>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-size:13px;color:#94a3b8;width:45%">Fecha de pago</td>
+                <td style="padding:12px 0;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:600;color:#1e293b;text-align:right">${fechaPago}</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 0;font-size:13px;color:#94a3b8">Medio de pago</td>
+                <td style="padding:12px 0;font-size:14px;font-weight:600;color:#1e293b;text-align:right">${medioPago}</td>
+              </tr>
+              ${comprobante ? `<tr><td style="padding:12px 0;font-size:13px;color:#94a3b8">Comprobante</td><td style="padding:12px 0;font-size:14px;font-weight:600;color:#1e293b;text-align:right">${comprobante}</td></tr>` : ''}
+            </table>
+          </div>
+          <div style="background:#f8fafc;padding:20px 40px;border-top:1px solid #f1f5f9">
+            <p style="margin:0;font-size:13px;color:#94a3b8;text-align:center">
+              Ante cualquier consulta, respondé este email.<br>
+              <strong style="color:#64748b">CajaPro</strong> · Sistema de gestión comercial
+            </p>
+          </div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+    try {
+      const nodemailer = require('nodemailer')
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: gmailUser, pass: gmailPass },
+      })
+      await transporter.sendMail({
+        from:    `"CajaPro" <${gmailUser}>`,
+        to:      comercioEmail,
+        subject: `✓ Pago registrado — ${tipo} (${montoFmt})`,
+        html,
+      })
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  })
 }
+
+// ─── Auto-updater ────────────────────────────────────────────────────────────
+// Solo activo en builds de producción. En dev no hace nada.
+function configurarAutoUpdater(ventana) {
+  if (!app.isPackaged) return
+
+  autoUpdater.autoDownload = false   // Preguntar antes de bajar
+  autoUpdater.autoInstallOnAppQuit = true
+
+  // Hay una nueva versión disponible
+  autoUpdater.on('update-available', (info) => {
+    ventana.webContents.send('update:disponible', info)
+  })
+
+  // No hay actualizaciones
+  autoUpdater.on('update-not-available', () => {
+    ventana.webContents.send('update:al-dia')
+  })
+
+  // Progreso de descarga
+  autoUpdater.on('download-progress', (progress) => {
+    ventana.webContents.send('update:progreso', progress)
+  })
+
+  // Descarga terminada → instalar al cerrar
+  autoUpdater.on('update-downloaded', () => {
+    ventana.webContents.send('update:listo')
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.error('[AutoUpdater]', err.message)
+  })
+
+  // Chequear actualizaciones 5s después de arrancar
+  setTimeout(() => autoUpdater.checkForUpdates(), 5000)
+}
+
+// IPC: el renderer puede pedir que se instale la actualización
+ipcMain.handle('update:instalar', () => {
+  autoUpdater.quitAndInstall()
+})
+
+// IPC: chequear manualmente
+ipcMain.handle('update:chequear', () => {
+  if (app.isPackaged) autoUpdater.checkForUpdates()
+})
+

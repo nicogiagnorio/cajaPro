@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Building2, Users, Settings2, ShieldCheck, LogOut } from 'lucide-react'
+import { LayoutDashboard, Building2, Users, Settings2, ShieldCheck, LogOut, DollarSign, Receipt, TrendingUp } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
@@ -8,6 +8,19 @@ const navItems = [
   { ruta: '/admin/usuarios',  etiqueta: 'Usuarios',   icono: Users           },
   { ruta: '/admin/ajustes',   etiqueta: 'Ajustes',    icono: Settings2       },
 ]
+
+const navFinanzas = [
+  { ruta: '/admin/finanzas',       etiqueta: 'Finanzas',       icono: TrendingUp },
+  { ruta: '/admin/cobros',         etiqueta: 'Cobros',         icono: DollarSign },
+  { ruta: '/admin/gastos-propios', etiqueta: 'Gastos propios', icono: Receipt    },
+]
+
+const navLinkClass = ({ isActive }) =>
+  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+    isActive
+      ? 'bg-violet-600 text-white'
+      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+  }`
 
 export default function LayoutAdmin() {
   const { perfil, cerrarSesion } = useAuth()
@@ -23,7 +36,7 @@ export default function LayoutAdmin() {
       {/* Sidebar admin */}
       <aside className="w-60 bg-slate-950 flex flex-col flex-shrink-0">
 
-        {/* Branding admin */}
+        {/* Branding */}
         <div className="px-4 py-4 border-b border-slate-800 min-h-[72px] flex items-center gap-3">
           <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center flex-shrink-0">
             <ShieldCheck size={16} className="text-white" />
@@ -37,17 +50,17 @@ export default function LayoutAdmin() {
         {/* Navegación */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {navItems.map(({ ruta, etiqueta, icono: Icono }) => (
-            <NavLink
-              key={ruta}
-              to={ruta}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-violet-600 text-white'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`
-              }
-            >
+            <NavLink key={ruta} to={ruta} className={navLinkClass}>
+              <Icono size={18} />
+              {etiqueta}
+            </NavLink>
+          ))}
+
+          <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+            Mi negocio
+          </p>
+          {navFinanzas.map(({ ruta, etiqueta, icono: Icono }) => (
+            <NavLink key={ruta} to={ruta} className={navLinkClass}>
               <Icono size={18} />
               {etiqueta}
             </NavLink>

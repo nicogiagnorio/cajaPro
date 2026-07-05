@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Building2, Plus, Pencil, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Users, Search } from 'lucide-react'
+import { Building2, Plus, Pencil, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Users, Search, Trash2 } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
 import Modal from '../../components/ui/Modal'
@@ -38,6 +38,11 @@ export default function Negocios() {
 
   // Toggle de módulos
   const [togglingMod, setTogglingMod] = useState(null) // `${comercioId}-${key}`
+
+  // Modal eliminar negocio
+  const [modalEliminar, setModalEliminar] = useState(null) // { id, nombre, nUsuarios }
+  const [eliminando,    setEliminando]    = useState(false)
+  const [errEliminar,   setErrEliminar]   = useState('')
 
   useEffect(() => { cargar() }, [])
 
@@ -202,13 +207,20 @@ export default function Negocios() {
 
                   {/* Acciones */}
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={() => abrirEditar(n)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                    <button onClick={() => abrirEditar(n)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors" title="Editar">
                       <Pencil size={15} />
                     </button>
-                    <button onClick={() => toggleActivo(n)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                    <button onClick={() => toggleActivo(n)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors" title={n.activo ? 'Desactivar' : 'Activar'}>
                       {n.activo
                         ? <ToggleRight size={18} className="text-emerald-500" />
                         : <ToggleLeft size={18} />}
+                    </button>
+                    <button
+                      onClick={() => setModalEliminar({ id: n.id, nombre: n.nombre, nUsuarios: typeof nUsuarios === 'number' ? nUsuarios : null })}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Eliminar negocio"
+                    >
+                      <Trash2 size={15} />
                     </button>
                     <button onClick={() => toggleExpandido(n)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
                       {abierto ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
@@ -287,6 +299,56 @@ export default function Negocios() {
           })}
         </div>
       )}
+
+      {/* Modal eliminar negocio */}
+      <Modal
+        abierto={!!modalEliminar}
+        onCerrar={() => { setModalEliminar(null); setErrEliminar('') }}
+        titulo="Eliminar negocio"
+      >
+        {modalEliminar && (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <Trash2 size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-red-700">{modalEliminar.nombre}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  Esta acción eliminará el negocio
+                  {modalEliminar.nUsuarios
+                    ? ` y sus ${modalEliminar.nUsuarios} usuario${modalEliminar.nUsuarios !== 1 ? 's' : ''}`
+                    : ' y todos sus usuarios'}
+                  {' '}de forma permanente. No se puede deshacer.
+                </p>
+              </div>
+            </div>
+            {errEliminar && <p className="text-sm text-red-500">{errEliminar}</p>}
+            <div className="flex gap-3">
+              <Button
+                variante="secundario"
+                className="flex-1"
+                onClick={() => { setModalEliminar(null); setErrEliminar('') }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 bg-red-600 hover:bg-red-700"
+                cargando={eliminando}
+                onClick={async () => {
+                  setEliminando(true)
+                  setErrEliminar('')
+                  const res = await window.adminAPI.eliminarComercio(modalEliminar.id)
+                  setEliminando(false)
+                  if (!res.ok) { setErrEliminar(res.error); return }
+                  setModalEliminar(null)
+                  cargar()
+                }}
+              >
+                <Trash2 size={15} /> Eliminar definitivamente
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* Modal crear/editar */}
       <Modal abierto={modal} onCerrar={() => setModal(false)} titulo={editando ? 'Editar negocio' : 'Nuevo negocio'}>

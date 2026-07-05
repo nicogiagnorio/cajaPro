@@ -24,7 +24,9 @@ export default function RecuperarPassword() {
 
   async function onSubmit({ email }) {
     // Siempre mostramos éxito para no revelar si el email existe
-    await supabase.auth.resetPasswordForEmail(email)
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://nicogiagnorio.github.io/cajaPro/public/confirm.html',
+    })
     setEnviado(true)
   }
 

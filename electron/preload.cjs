@@ -1,8 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron')
+const { version } = require('../package.json')
 
 // Información básica de la app
 contextBridge.exposeInMainWorld('appInfo', {
-  version:    '0.1.0',
+  version,
   plataforma: process.platform,
 })
 
@@ -41,6 +42,13 @@ contextBridge.exposeInMainWorld('adminAPI', {
   actualizarUsuario:         (id, datos)                => ipcRenderer.invoke('admin:actualizar-usuario', { id, datos }),
   resetearPassword:          (authUserId, nuevaPassword)=> ipcRenderer.invoke('admin:resetear-password', { authUserId, nuevaPassword }),
   toggleActivoUsuario:       (id, activo)               => ipcRenderer.invoke('admin:toggle-activo-usuario', { id, activo }),
+  eliminarUsuario:           (id, authUserId)            => ipcRenderer.invoke('admin:eliminar-usuario', { id, authUserId }),
+  eliminarComercio:          (comercioId)                => ipcRenderer.invoke('admin:eliminar-comercio', comercioId),
+})
+
+// Email / notificaciones — window.electronAPI
+contextBridge.exposeInMainWorld('electronAPI', {
+  enviarEmailPago: (datos) => ipcRenderer.invoke('admin:enviar-confirmacion-pago', datos),
 })
 
 // API ARCA — accesible desde React como window.arca
@@ -76,4 +84,19 @@ contextBridge.exposeInMainWorld('arca', {
    */
   solicitarNC: (datos) =>
     ipcRenderer.invoke('arca:solicitar-nc', datos),
+})
+
+// ─── Auto-updater ─────────────────────────────────────────────────────────────
+contextBridge.exposeInMainWorld('updaterAPI', {
+  /** Chequear actualizaciones manualmente */
+  chequear: () => ipcRenderer.invoke('update:chequear'),
+
+  /** Instalar la actualización descargada y reiniciar */
+  instalar: () => ipcRenderer.invoke('update:instalar'),
+
+  /** Escuchar eventos del proceso principal */
+  onDisponible:  (fn) => ipcRenderer.on('update:disponible',  (_e, info)     => fn(info)),
+  onAlDia:       (fn) => ipcRenderer.on('update:al-dia',      ()             => fn()),
+  onProgreso:    (fn) => ipcRenderer.on('update:progreso',    (_e, progress) => fn(progress)),
+  onListo:       (fn) => ipcRenderer.on('update:listo',       ()             => fn()),
 })

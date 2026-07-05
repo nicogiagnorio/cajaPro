@@ -28,6 +28,7 @@ export default function CategoriasGastos() {
     const { data } = await supabase
       .from('categorias_gastos')
       .select('*')
+      .eq('comercio_id', perfil.comercio_id)
       .order('nombre')
     setCategorias(data ?? [])
     setCargando(false)

@@ -71,12 +71,14 @@ export default function CompraDetallada() {
       supabase
         .from('productos')
         .select('id, nombre, codigo_barras, precio_costo, stock_actual, unidad')
+        .eq('comercio_id', perfil.comercio_id)
         .eq('activo', true)
         .order('nombre')
         .limit(500),
       supabase
         .from('proveedores')
         .select('id, nombre')
+        .eq('comercio_id', perfil.comercio_id)
         .eq('activo', true)
         .order('nombre'),
     ])

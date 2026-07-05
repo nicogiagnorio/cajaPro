@@ -32,37 +32,61 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function cargarPerfil(authUserId) {
+    // Query completa con todas las columnas de comercios
     const { data, error } = await supabase
       .from('usuarios')
       .select('*, comercios(id, nombre, domicilio, telefono, email, cuit, logo_url, banner_url, color_tema, modulos, modulos_permitidos, rubro, tipo_perfil)')
       .eq('auth_user_id', authUserId)
       .maybeSingle()
 
-    if (error) {
-      console.error('cargarPerfil error:', error.message)
-      const { data: dataFallback } = await supabase
-        .from('usuarios')
-        .select('*, comercios(id, nombre, domicilio, telefono, email, cuit, logo_url, banner_url, color_tema, modulos)')
-        .eq('auth_user_id', authUserId)
-        .maybeSingle()
-      if (!dataFallback || !dataFallback.activo) {
+    if (!error) {
+      if (!data || !data.activo) {
         await supabase.auth.signOut()
         return
       }
-      const { comercios: comercioData, ...perfilData } = dataFallback
+      const { comercios: comercioData, ...perfilData } = data
       setPerfil(perfilData)
       setComercio(comercioData ?? null)
       return
     }
 
-    if (!data || !data.activo) {
-      await supabase.auth.signOut()
+    // Fallback 1: sin columnas nuevas de comercios (DB sin migraciones recientes)
+    console.warn('cargarPerfil fallback1:', error.message)
+    const { data: dataF1, error: errorF1 } = await supabase
+      .from('usuarios')
+      .select('*, comercios(id, nombre, domicilio, telefono, email, cuit, logo_url, banner_url, color_tema, modulos)')
+      .eq('auth_user_id', authUserId)
+      .maybeSingle()
+
+    if (!errorF1) {
+      if (!dataF1 || !dataF1.activo) {
+        await supabase.auth.signOut()
+        return
+      }
+      const { comercios: comercioData, ...perfilData } = dataF1
+      setPerfil(perfilData)
+      setComercio(comercioData ?? null)
       return
     }
 
-    const { comercios: comercioData, ...perfilData } = data
-    setPerfil(perfilData)
-    setComercio(comercioData ?? null)
+    // Fallback 2: solo usuarios sin join (schema muy desactualizado)
+    console.warn('cargarPerfil fallback2:', errorF1.message)
+    const { data: dataF2, error: errorF2 } = await supabase
+      .from('usuarios')
+      .select('id, nombre, email, rol, activo, comercio_id, auth_user_id')
+      .eq('auth_user_id', authUserId)
+      .maybeSingle()
+
+    if (errorF2) {
+      console.error('cargarPerfil todos los fallbacks fallaron:', errorF2.message)
+      return
+    }
+    if (!dataF2 || !dataF2.activo) {
+      await supabase.auth.signOut()
+      return
+    }
+    setPerfil(dataF2)
+    setComercio(null)
   }
 
   async function refrescarComercio() {

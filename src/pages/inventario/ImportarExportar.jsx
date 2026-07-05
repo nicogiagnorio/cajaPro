@@ -157,9 +157,9 @@ export default function ImportarExportar() {
   async function cargar() {
     setCargando(true)
     const [{ data: prods }, { data: cats }, { data: provs }] = await Promise.all([
-      supabase.from('productos').select('*, categorias(nombre), proveedores(nombre)').order('nombre').limit(2000),
-      supabase.from('categorias').select('id, nombre').eq('activo', true).order('nombre'),
-      supabase.from('proveedores').select('id, nombre, contacto, telefono, email, direccion').eq('activo', true).order('nombre'),
+      supabase.from('productos').select('*, categorias(nombre), proveedores(nombre)').eq('comercio_id', perfil.comercio_id).order('nombre').limit(2000),
+      supabase.from('categorias').select('id, nombre').eq('comercio_id', perfil.comercio_id).eq('activo', true).order('nombre'),
+      supabase.from('proveedores').select('id, nombre, contacto, telefono, email, direccion').eq('comercio_id', perfil.comercio_id).eq('activo', true).order('nombre'),
     ])
     setDatos({ productos: prods ?? [], categorias: cats ?? [], proveedores: provs ?? [] })
     setCargando(false)

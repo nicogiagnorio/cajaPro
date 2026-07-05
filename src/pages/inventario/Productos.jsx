@@ -80,10 +80,11 @@ export default function Productos() {
       supabase
         .from('productos')
         .select('*, categorias(id, nombre), proveedores(id, nombre)')
+        .eq('comercio_id', perfil.comercio_id)
         .order('nombre')
         .limit(200),
-      supabase.from('categorias').select('id, nombre').eq('activo', true).order('nombre'),
-      supabase.from('proveedores').select('id, nombre').eq('activo', true).order('nombre'),
+      supabase.from('categorias').select('id, nombre').eq('comercio_id', perfil.comercio_id).eq('activo', true).order('nombre'),
+      supabase.from('proveedores').select('id, nombre').eq('comercio_id', perfil.comercio_id).eq('activo', true).order('nombre'),
     ])
     setProductos(prods   ?? [])
     setCategorias(cats   ?? [])

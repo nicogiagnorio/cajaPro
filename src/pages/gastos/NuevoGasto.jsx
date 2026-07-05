@@ -42,6 +42,7 @@ export default function NuevoGasto() {
     supabase
       .from('categorias_gastos')
       .select('id, nombre')
+      .eq('comercio_id', perfil.comercio_id)
       .eq('activo', true)
       .order('nombre')
       .then(({ data }) => setCategorias(data ?? []))

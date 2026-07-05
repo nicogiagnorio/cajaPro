@@ -299,7 +299,8 @@ function ConfigAvanzada({ comercio, refrescarComercio }) {
   async function toggleModulo(key, habilitado) {
     setTogglingModulo(key)
     const nuevosModulos = { ...(comercio?.modulos ?? {}), [key]: !habilitado }
-    await supabase.from('comercios').update({ modulos: nuevosModulos }).eq('id', comercio.id)
+    const { error: err } = await supabase.from('comercios').update({ modulos: nuevosModulos }).eq('id', comercio.id)
+    if (err) console.error('toggleModulo error:', err.message)
     await refrescarComercio()
     setTogglingModulo(null)
   }
@@ -410,6 +411,7 @@ function ConfigAvanzada({ comercio, refrescarComercio }) {
 export default function Configuracion() {
   const { perfil, comercio, refrescarComercio } = useAuth()
   const esAdmin = perfil?.rol === 'admin'
+  const [errorGuardado, setErrorGuardado] = useState('')
 
   const { register, handleSubmit, formState: { isSubmitting, isDirty }, reset } = useForm({
     defaultValues: {
@@ -444,7 +446,8 @@ export default function Configuracion() {
   }
 
   async function guardarDatos(datos) {
-    await supabase
+    setErrorGuardado('')
+    const { error: err } = await supabase
       .from('comercios')
       .update({
         nombre:      datos.nombre.trim(),
@@ -455,6 +458,7 @@ export default function Configuracion() {
         tipo_perfil: datos.tipo_perfil         || 'cliente',
       })
       .eq('id', comercio.id)
+    if (err) { setErrorGuardado('No se pudo guardar: ' + err.message); return }
     await refrescarComercio()
     reset(datos)
   }
@@ -530,6 +534,9 @@ export default function Configuracion() {
             </div>
           </div>
 
+          {errorGuardado && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{errorGuardado}</p>
+          )}
           {esAdmin && (
             <Button type="submit" cargando={isSubmitting} disabled={!isDirty} className="w-full">
               Guardar datos

@@ -32,7 +32,7 @@ export default function Categorias() {
 
   async function cargar() {
     setCargando(true)
-    const { data } = await supabase.from('categorias').select('*').order('nombre')
+    const { data } = await supabase.from('categorias').select('*').eq('comercio_id', perfil.comercio_id).order('nombre')
     setCategorias(data ?? [])
     setCargando(false)
   }

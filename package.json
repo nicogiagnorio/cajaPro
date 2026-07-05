@@ -1,6 +1,6 @@
 {
   "name": "cajapro",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "Software de gestión para comercios de barrio",
   "main": "electron/main.cjs",
   "type": "module",
@@ -9,17 +9,26 @@
     "dev:electron": "electron .",
     "dev": "node scripts/dev.cjs",
     "build": "vite build",
-    "package": "npm run build && set CSC_IDENTITY_AUTO_DISCOVERY=false && npx electron-builder --win --publish never",
+    "package": "npm run build && npx electron-builder --win --publish never",
+    "release": "npm run build && npx electron-builder --win --publish always",
     "preview": "vite preview"
   },
-  "keywords": ["pos", "inventario", "comercio", "gestion"],
+  "keywords": [
+    "pos",
+    "inventario",
+    "comercio",
+    "gestion"
+  ],
   "author": "",
   "license": "UNLICENSED",
   "dependencies": {
     "@afipsdk/afip.js": "^1.2.3",
     "@hookform/resolvers": "^5.4.0",
     "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^17.4.2",
+    "electron-updater": "^6.3.9",
     "lucide-react": "^1.18.0",
+    "nodemailer": "^9.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.79.0",
@@ -43,7 +52,7 @@
   "build": {
     "appId": "com.cajapro.app",
     "productName": "CajaPro",
-    "copyright": "2025 CajaPro",
+    "copyright": "© 2026 CajaPro",
     "asar": true,
     "directories": {
       "output": "release",
@@ -54,10 +63,30 @@
       "electron/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": ".env.production",
+        "to": ".env"
+      }
+    ],
     "win": {
       "icon": "build/icon.ico",
-      "target": [{"target": "nsis", "arch": ["x64"]}],
+      "certificateFile": "build/cajapro.pfx",
+      "certificatePassword": "cajapro2025",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "artifactName": "CajaPro-Instalador-${version}.exe"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "nicogiagnorio",
+      "repo": "cajaPro"
     },
     "nsis": {
       "oneClick": false,
@@ -71,7 +100,13 @@
       "deleteAppDataOnUninstall": false,
       "license": null
     },
-    "mac": {"icon": "build/icon.png", "target": "dmg"},
-    "linux": {"icon": "build/icon.png", "target": "AppImage"}
+    "mac": {
+      "icon": "build/icon.png",
+      "target": "dmg"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": "AppImage"
+    }
   }
 }

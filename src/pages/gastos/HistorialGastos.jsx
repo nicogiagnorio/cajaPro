@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { traducirError } from '../../lib/errores'
 import Spinner from '../../components/ui/Spinner'
 
 function ars(n) {
@@ -60,6 +61,7 @@ export default function HistorialGastos() {
     supabase
       .from('categorias_gastos')
       .select('id, nombre')
+      .eq('comercio_id', perfil.comercio_id)
       .eq('activo', true)
       .order('nombre')
       .then(({ data }) => setCategorias(data ?? []))
@@ -71,6 +73,7 @@ export default function HistorialGastos() {
     const { data } = await supabase
       .from('gastos')
       .select('id, descripcion, monto, fecha, comprobante, notas, categorias_gastos(id, nombre), usuarios(nombre)')
+      .eq('comercio_id', perfil.comercio_id)
       .gte('fecha', desde)
       .lte('fecha', hasta)
       .order('fecha', { ascending: false })
@@ -82,7 +85,12 @@ export default function HistorialGastos() {
   async function eliminarGasto(gasto) {
     if (!confirm(`¿Eliminar el gasto "${gasto.descripcion}"?`)) return
     setEliminando(gasto.id)
-    await supabase.from('gastos').delete().eq('id', gasto.id)
+    const { error } = await supabase.from('gastos').delete().eq('id', gasto.id)
+    if (error) {
+      alert(traducirError(error))
+      setEliminando(null)
+      return
+    }
     setGastos(prev => prev.filter(g => g.id !== gasto.id))
     setEliminando(null)
   }
@@ -194,8 +202,7 @@ export default function HistorialGastos() {
                 </td>
                 <td className="px-5 py-3 text-right font-bold text-slate-900">
                   {ars(totalFiltrado)}
-                </td>
-                {perfil?.rol === 'admin' && <td />}
+                           </td>
               </tr>
             </tfoot>
           </table>

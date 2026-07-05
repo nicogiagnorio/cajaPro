@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
 import {
   ChevronDown, ChevronRight, XCircle, RefreshCw,
   FileCheck, FileX, Loader2, AlertCircle, CheckCircle2,
@@ -127,7 +127,7 @@ function PanelNC({ venta, onExito, onCancelar }) {
       total: venta.total,
     })
     if (res.ok) {
-      supabase.from('ventas').update({
+      await supabase.from('ventas').update({
         nc_cae: res.cae, nc_nro_factura: res.nroNC,
         nc_tipo_factura: res.tipoNC, nc_punto_venta: res.puntoVenta,
         nc_vencimiento: res.caeVencimiento, nc_fecha: new Date().toISOString(),
@@ -212,8 +212,8 @@ function TablaVentas({ ventas, onCancelar, onActualizar }) {
         </thead>
         <tbody className="divide-y divide-slate-100">
           {ventas.map(venta => (
-            <>
-              <tr key={venta.id}
+            <Fragment key={venta.id}>
+              <tr
                 className={`hover:bg-slate-50 transition-colors cursor-pointer ${venta.estado === 'cancelada' ? 'opacity-50' : ''}`}
                 onClick={() => toggleDetalle(venta)}>
                 <td className="px-4 py-3 text-slate-400">
@@ -339,7 +339,7 @@ function TablaVentas({ ventas, onCancelar, onActualizar }) {
                   </td>
                 </tr>
               )}
-            </>
+            </Fragment>
           ))}
         </tbody>
       </table>
@@ -668,10 +668,12 @@ function BarraDoble({ label, totalFact, totalSinFact, maxTotal }) {
 }
 
 function TabGraficos() {
+  const { perfil } = useAuth()
   const [datos,    setDatos]    = useState([])
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
+    if (!perfil?.comercio_id) return
     async function cargar() {
       setCargando(true)
       const desde = new Date()
@@ -679,6 +681,7 @@ function TabGraficos() {
       desde.setDate(1)
       const { data } = await supabase.from('ventas')
         .select('fecha, total, cae, nc_cae')
+        .eq('comercio_id', perfil.comercio_id)
         .eq('estado', 'completada')
         .gte('fecha', desde.toISOString())
         .order('fecha', { ascending: true })
@@ -686,7 +689,7 @@ function TabGraficos() {
       setCargando(false)
     }
     cargar()
-  }, [])
+  }, [perfil?.comercio_id])
 
   const mesesData = useMemo(() => {
     const map = {}

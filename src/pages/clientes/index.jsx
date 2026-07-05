@@ -36,9 +36,10 @@ function ars(n) {
 
 function fmtFecha(iso) {
   if (!iso) return '-'
+  const dateStr = iso.includes('T') ? iso : iso + 'T12:00:00'
   return new Intl.DateTimeFormat('es-AR', {
     day: '2-digit', month: '2-digit', year: 'numeric',
-  }).format(new Date(iso + 'T12:00:00'))
+  }).format(new Date(dateStr))
 }
 
 function calcularEdad(fechaNac) {
@@ -87,6 +88,7 @@ export default function Clientes() {
     const { data } = await supabase
       .from('clientes')
       .select('*, ventas(id, total, fecha, estado)')
+      .eq('comercio_id', perfil.comercio_id)
       .order('nombre')
     setClientes(data ?? [])
     setCargando(false)
@@ -179,8 +181,10 @@ export default function Clientes() {
   }
 
   async function toggleActivo(c) {
-    await supabase.from('clientes').update({ activo: !c.activo }).eq('id', c.id)
-    setClientes(prev => prev.map(x => x.id === c.id ? { ...x, activo: !x.activo } : x))
+    const nuevoActivo = !c.activo
+    const { error } = await supabase.from('clientes').update({ activo: nuevoActivo }).eq('id', c.id)
+    if (error) { setErrorServer(traducirError(error)); return }
+    setClientes(prev => prev.map(x => x.id === c.id ? { ...x, activo: nuevoActivo } : x))
   }
 
   return (
@@ -416,7 +420,7 @@ export default function Clientes() {
               Cancelar
             </Button>
             <Button type="submit" cargando={isSubmitting} className="flex-1">
-              {editando ? 'Guardar cambios' : `Crear ${L.singular}`}
+              {editando ? 'Guardar cambios' : L.nuevo}
             </Button>
           </div>
         </form>

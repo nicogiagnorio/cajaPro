@@ -47,6 +47,7 @@ export default function GestionUsuarios() {
     const { data } = await supabase
       .from('usuarios')
       .select('*')
+      .eq('comercio_id', perfil.comercio_id)
       .order('created_at', { ascending: true })
     setUsuarios(data ?? [])
     setCargando(false)

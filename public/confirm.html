@@ -26,9 +26,11 @@
     .instruccion { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 16px 20px; margin-top: 20px; text-align: left; }
     .instruccion p { font-size: 14px; color: #94a3b8; margin: 0; }
     .instruccion p + p { margin-top: 6px; }
+    /* Spinner */
     .spinner-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px 0; }
     .spinner { width: 40px; height: 40px; border: 3px solid #334155; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    /* Form */
     .form { margin-top: 28px; text-align: left; }
     .input-wrap { position: relative; margin-bottom: 14px; }
     .input-wrap input { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 12px 44px 12px 14px; font-size: 15px; color: #f8fafc; outline: none; transition: border-color 0.15s; }
@@ -49,82 +51,225 @@
 </head>
 <body>
   <div class="card">
-    <div class="logo"><div class="logo-icon">🎪</div><span class="logo-text">CajaPro</span></div>
+    <div class="logo">
+      <div class="logo-icon">🏪</div>
+      <span class="logo-text">CajaPro</span>
+    </div>
     <div id="contenido"></div>
   </div>
+
   <script>
+    // ── Supabase REST API directa (sin SDK) ───────────────────────
     const SUPABASE_URL  = 'https://ttqztzybaozsodjjnlzb.supabase.co'
     const SUPABASE_ANON = 'sb_publishable_zFb48ek98kIzYulDu7umLA_vlb9f5Ja'
+
     const contenido = document.getElementById('contenido')
+
+    // Parsear parámetros de URL
     const qp = new URLSearchParams(window.location.search)
     const hp = new URLSearchParams(window.location.hash.replace('#', '?'))
-    const type = qp.get('type') || hp.get('type')
-    const tokenHash = qp.get('token_hash')
-    const accessToken = hp.get('access_token')
-    const error = qp.get('error') || hp.get('error')
-    const errorCode = qp.get('error_code') || hp.get('error_code')
 
+    const type        = qp.get('type')         || hp.get('type')
+    const tokenHash   = qp.get('token_hash')                        // PKCE flow
+    const accessToken = hp.get('access_token')                      // implicit flow
+    const error       = qp.get('error')         || hp.get('error')
+    const errorCode   = qp.get('error_code')    || hp.get('error_code')
+
+    // ── Lógica principal ─────────────────────────────────────────
     async function init() {
       if (error || errorCode) { mostrarExpirado(); return }
+
       if (type === 'recovery') {
-        if (accessToken) { mostrarFormPassword(accessToken); return }
+        if (accessToken) {
+          // Implicit flow: el access_token ya es un JWT válido para updateUser
+          mostrarFormPassword(accessToken)
+          return
+        }
         if (tokenHash) {
+          // PKCE flow: intercambiar token_hash por sesión via REST API
           mostrarCargando()
           const session = await verificarTokenHash(tokenHash)
           if (!session) { mostrarExpirado(); return }
-          mostrarFormPassword(session.access_token); return
+          mostrarFormPassword(session.access_token)
+          return
         }
-        mostrarExpirado(); return
+        mostrarExpirado()
+        return
       }
-      if (type === 'signup' || type === 'email' || type === 'magiclink' || accessToken) { mostrarSignupOk(); return }
+
+      // signup, email, magiclink — confirmación de cuenta
+      if (type === 'signup' || type === 'email' || type === 'magiclink' || accessToken) {
+        mostrarSignupOk()
+        return
+      }
+
       mostrarExpirado()
     }
 
+    // ── Supabase REST calls ──────────────────────────────────────
     async function verificarTokenHash(tokenHash) {
       try {
-        const r = await fetch(SUPABASE_URL + '/auth/v1/verify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON }, body: JSON.stringify({ token_hash: tokenHash, type: 'recovery' }) })
-        return r.ok ? await r.json() : null
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON },
+          body: JSON.stringify({ token_hash: tokenHash, type: 'recovery' })
+        })
+        if (!resp.ok) return null
+        return await resp.json()
       } catch { return null }
     }
 
-    async function cambiarPassword(jwt, pw) {
+    async function cambiarPassword(jwt, newPassword) {
       try {
-        const r = await fetch(SUPABASE_URL + '/auth/v1/user', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + jwt }, body: JSON.stringify({ password: pw }) })
-        const d = await r.json()
-        return r.ok ? { ok: true } : { error: d.message || d.error_description || 'Error' }
+        const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON,
+            'Authorization': `Bearer ${jwt}`
+          },
+          body: JSON.stringify({ password: newPassword })
+        })
+        const data = await resp.json()
+        if (!resp.ok) return { error: data.message || data.error_description || 'Error desconocido' }
+        return { ok: true }
       } catch (e) { return { error: e.message } }
     }
 
-    function mostrarCargando() { contenido.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><p style="margin:0;color:#64748b">Verificando link…</p></div>' }
+    // ── Vistas ───────────────────────────────────────────────────
+    function mostrarCargando() {
+      contenido.innerHTML = `
+        <div class="spinner-wrap">
+          <div class="spinner"></div>
+          <p style="margin:0;color:#64748b">Verificando link…</p>
+        </div>`
+    }
 
-    function mostrarExpirado() { contenido.innerHTML = '<div class="badge badge-error">Link inválido</div><div class="estado-icon">❌</div><h1>El link no es válido</h1><p>Este link <strong>expiró</strong> o ya fue utilizado.</p><div class="instruccion"><p>Volvé a la app y solicitá un nuevo link de recuperación.</p><p style="margin-top:6px">Los links son válidos durante 60 minutos.</p></div>' }
+    function mostrarExpirado() {
+      contenido.innerHTML = `
+        <div class="badge badge-error">Link inválido</div>
+        <div class="estado-icon">❌</div>
+        <h1>El link no es válido</h1>
+        <p>Este link <strong>expiró</strong> o ya fue utilizado.</p>
+        <div class="instruccion">
+          <p>Volvé a la app y solicitá un nuevo link de recuperación.</p>
+          <p style="margin-top:6px">Los links son válidos durante 60 minutos.</p>
+        </div>`
+    }
 
-    function mostrarSignupOk() { contenido.innerHTML = '<div class="badge badge-success">Cuenta verificada</div><div class="estado-icon">✅</div><h1>¡Email confirmado!</h1><p>Tu cuenta fue verificada correctamente.</p><p>Ya podés <strong>iniciar sesión en CajaPro</strong> desde tu computadora.</p><div class="instruccion"><p>Abrí CajaPro y usá tu email y contraseña para ingresar.</p></div><p style="margin-top:20px;font-size:14px;color:#64748b">¿Todavía no lo instalaste?</p><a class="btn-download" href="https://github.com/nicogiagnorio/cajaPro/releases/latest">Descargar CajaPro</a><hr class="divider" /><p class="cierre">Podés cerrar esta pestaña.</p>' }
+    function mostrarSignupOk() {
+      contenido.innerHTML = `
+        <div class="badge badge-success">Cuenta verificada</div>
+        <div class="estado-icon">✅</div>
+        <h1>¡Email confirmado!</h1>
+        <p>Tu cuenta fue verificada correctamente.</p>
+        <p>Ya podés <strong>iniciar sesión en CajaPro</strong> desde tu computadora.</p>
+        <div class="instruccion">
+          <p>Abrí CajaPro y usá tu email y contraseña para ingresar.</p>
+        </div>
+        <p style="margin-top:20px;font-size:14px;color:#64748b">¿Todavía no lo instalaste?</p>
+        <a class="btn-download" href="https://github.com/nicogiagnorio/cajaPro/releases/latest">
+          Descargar CajaPro
+        </a>
+        <hr class="divider" />
+        <p class="cierre">Podés cerrar esta pestaña.</p>`
+    }
 
     function mostrarFormPassword(jwt) {
-      contenido.innerHTML = '<div class="badge badge-info">Nueva contraseña</div><div class="estado-icon">🔐</div><h1>Creá tu nueva contraseña</h1><p>Ingresá la nueva contraseña para tu cuenta de CajaPro.</p><form id="form-pass" class="form" autocomplete="off"><div class="input-wrap"><input type="password" id="p1" placeholder="Nueva contraseña (mín. 8 caracteres)" autocomplete="new-password" /><button type="button" class="toggle-pass" data-target="p1">👁</button></div><div class="strength-bar"><div class="strength-fill" id="sfill"></div></div><div class="strength-label" id="slabel"></div><div class="input-wrap"><input type="password" id="p2" placeholder="Repetí la contraseña" autocomplete="new-password" /><button type="button" class="toggle-pass" data-target="p2">👁</button></div><div class="form-error" id="ferr"></div><button type="submit" class="btn-submit" id="bsub">Cambiar contraseña</button></form>'
-      document.querySelectorAll('.toggle-pass').forEach(btn => { btn.addEventListener('click', () => { const inp = document.getElementById(btn.dataset.target); inp.type = inp.type === 'password' ? 'text' : 'password'; btn.textContent = inp.type === 'password' ? '👁' : '🙈' }) })
+      contenido.innerHTML = `
+        <div class="badge badge-info">Nueva contraseña</div>
+        <div class="estado-icon">🔐</div>
+        <h1>Creá tu nueva contraseña</h1>
+        <p>Ingresá la nueva contraseña para tu cuenta de CajaPro.</p>
+        <form id="form-pass" class="form" autocomplete="off">
+          <div class="input-wrap">
+            <input type="password" id="p1" placeholder="Nueva contraseña (mín. 8 caracteres)" autocomplete="new-password" />
+            <button type="button" class="toggle-pass" data-target="p1">👁</button>
+          </div>
+          <div class="strength-bar"><div class="strength-fill" id="sfill"></div></div>
+          <div class="strength-label" id="slabel"></div>
+          <div class="input-wrap">
+            <input type="password" id="p2" placeholder="Repetí la contraseña" autocomplete="new-password" />
+            <button type="button" class="toggle-pass" data-target="p2">👁</button>
+          </div>
+          <div class="form-error" id="ferr"></div>
+          <button type="submit" class="btn-submit" id="bsub">Cambiar contraseña</button>
+        </form>`
+
+      // Toggle visibilidad
+      document.querySelectorAll('.toggle-pass').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const inp = document.getElementById(btn.dataset.target)
+          inp.type = inp.type === 'password' ? 'text' : 'password'
+          btn.textContent = inp.type === 'password' ? '👁' : '🙈'
+        })
+      })
+
+      // Indicador de fortaleza
       document.getElementById('p1').addEventListener('input', () => {
-        const val = document.getElementById('p1').value, fill = document.getElementById('sfill'), label = document.getElementById('slabel')
+        const val   = document.getElementById('p1').value
+        const fill  = document.getElementById('sfill')
+        const label = document.getElementById('slabel')
         if (!val) { fill.style.width = '0'; label.textContent = ''; return }
         const score = [val.length>=8, val.length>=12, /[A-Z]/.test(val), /[0-9]/.test(val), /[^A-Za-z0-9]/.test(val)].filter(Boolean).length
-        const n = [{pct:'20%',color:'#ef4444',text:'Muy débil'},{pct:'40%',color:'#f97316',text:'Débil'},{pct:'60%',color:'#eab308',text:'Regular'},{pct:'80%',color:'#22c55e',text:'Fuerte'},{pct:'100%',color:'#4ade80',text:'Muy fuerte'}][Math.min(Math.max(score-1,0),4)]
-        fill.style.width=n.pct; fill.style.background=n.color; label.textContent=n.text; label.style.color=n.color
+        const niveles = [
+          { pct:'20%', color:'#ef4444', text:'Muy débil'  },
+          { pct:'40%', color:'#f97316', text:'Débil'      },
+          { pct:'60%', color:'#eab308', text:'Regular'    },
+          { pct:'80%', color:'#22c55e', text:'Fuerte'     },
+          { pct:'100%',color:'#4ade80', text:'Muy fuerte' },
+        ]
+        const n = niveles[Math.min(Math.max(score - 1, 0), 4)]
+        fill.style.width = n.pct; fill.style.background = n.color
+        label.textContent = n.text; label.style.color = n.color
       })
+
+      // Submit
       document.getElementById('form-pass').addEventListener('submit', async e => {
         e.preventDefault()
-        const p1=document.getElementById('p1').value, p2=document.getElementById('p2').value, err=document.getElementById('ferr'), btn=document.getElementById('bsub')
+        const p1  = document.getElementById('p1').value
+        const p2  = document.getElementById('p2').value
+        const err = document.getElementById('ferr')
+        const btn = document.getElementById('bsub')
+
         err.classList.remove('visible')
-        if (p1.length<8) { err.textContent='La contraseña debe tener al menos 8 caracteres.'; err.classList.add('visible'); return }
-        if (p1!==p2) { err.textContent='Las contraseñas no coinciden.'; err.classList.add('visible'); return }
-        btn.textContent='Guardando…'; btn.disabled=true
+
+        if (p1.length < 8) {
+          err.textContent = 'La contraseña debe tener al menos 8 caracteres.'
+          err.classList.add('visible'); return
+        }
+        if (p1 !== p2) {
+          err.textContent = 'Las contraseñas no coinciden.'
+          err.classList.add('visible'); return
+        }
+
+        btn.textContent = 'Guardando…'; btn.disabled = true
+
         const result = await cambiarPassword(jwt, p1)
-        if (result.error) { err.textContent='No se pudo cambiar la contraseña. El link puede haber expirado.'; err.classList.add('visible'); btn.textContent='Cambiar contraseña'; btn.disabled=false; return }
+
+        if (result.error) {
+          err.textContent = 'No se pudo cambiar la contraseña. El link puede haber expirado, solicitá uno nuevo.'
+          err.classList.add('visible')
+          btn.textContent = 'Cambiar contraseña'; btn.disabled = false
+          return
+        }
+
         mostrarPasswordOk()
       })
     }
 
-    function mostrarPasswordOk() { contenido.innerHTML = '<div class="badge badge-success">¡Listo!</div><div class="estado-icon">✅</div><h1>Contraseña actualizada</h1><p>Tu contraseña fue cambiada correctamente.</p><div class="instruccion"><p>Abrí CajaPro e ingresá con tu email y tu nueva contraseña.</p></div><hr class="divider" /><p class="cierre">Podés cerrar esta pestaña.</p>' }
+    function mostrarPasswordOk() {
+      contenido.innerHTML = `
+        <div class="badge badge-success">¡Listo!</div>
+        <div class="estado-icon">✅</div>
+        <h1>Contraseña actualizada</h1>
+        <p>Tu contraseña fue cambiada correctamente.</p>
+        <div class="instruccion">
+          <p>Abrí CajaPro e ingresá con tu email y tu nueva contraseña.</p>
+        </div>
+        <hr class="divider" />
+        <p class="cierre">Podés cerrar esta pestaña.</p>`
+    }
 
     init()
   </script>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Users, Plus, Pencil, ToggleLeft, ToggleRight, KeyRound, Search } from 'lucide-react'
+import { Users, Plus, Pencil, ToggleLeft, ToggleRight, KeyRound, Search, Trash2 } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import Spinner from '../../components/ui/Spinner'
@@ -31,6 +31,11 @@ export default function Usuarios() {
   const [nuevaPwd,   setNuevaPwd]   = useState('')
   const [reseteando, setReseteando] = useState(false)
   const [msgPwd,     setMsgPwd]     = useState('')
+
+  // Modal eliminar usuario
+  const [modalEliminar, setModalEliminar] = useState(null) // { id, authUserId, nombre }
+  const [eliminando,    setEliminando]    = useState(false)
+  const [errEliminar,   setErrEliminar]   = useState('')
 
   useEffect(() => { cargar() }, [])
 
@@ -218,6 +223,13 @@ export default function Usuarios() {
                       ? <ToggleRight size={18} className="text-emerald-500" />
                       : <ToggleLeft size={18} />}
                   </button>
+                  <button
+                    onClick={() => { setModalEliminar({ id: u.id, authUserId: u.auth_user_id, nombre: u.nombre }); setErrEliminar('') }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    title="Eliminar usuario"
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               </div>
             )
@@ -298,6 +310,52 @@ export default function Usuarios() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Modal eliminar usuario */}
+      <Modal
+        abierto={!!modalEliminar}
+        onCerrar={() => { setModalEliminar(null); setErrEliminar('') }}
+        titulo="Eliminar usuario"
+      >
+        {modalEliminar && (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <Trash2 size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-red-700">{modalEliminar.nombre}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  Se eliminará el usuario y su cuenta de acceso de forma permanente. Esta acción no se puede deshacer.
+                </p>
+              </div>
+            </div>
+            {errEliminar && <p className="text-sm text-red-500">{errEliminar}</p>}
+            <div className="flex gap-3">
+              <Button
+                variante="secundario"
+                className="flex-1"
+                onClick={() => { setModalEliminar(null); setErrEliminar('') }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 bg-red-600 hover:bg-red-700"
+                cargando={eliminando}
+                onClick={async () => {
+                  setEliminando(true)
+                  setErrEliminar('')
+                  const res = await window.adminAPI.eliminarUsuario(modalEliminar.id, modalEliminar.authUserId)
+                  setEliminando(false)
+                  if (!res.ok) { setErrEliminar(res.error); return }
+                  setModalEliminar(null)
+                  cargar()
+                }}
+              >
+                <Trash2 size={15} /> Eliminar definitivamente
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Modal resetear contraseña */}

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { traducirError } from '../../lib/errores'
+import { useAuth } from '../../context/AuthContext'
 import Spinner from '../../components/ui/Spinner'
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -380,6 +381,7 @@ function SeccionArca({ ventasBruto, totalBruto }) {
 // ── Pagina principal ──────────────────────────────────────────
 
 export default function Reportes() {
+  const { perfil } = useAuth()
   const meses = useMemo(() => mesesDisponibles(24), [])
 
   const [selMeses,  setSelMeses]  = useState([mesActual()])
@@ -423,9 +425,9 @@ export default function Reportes() {
       hastaDate = ultimo.hastaDate
     }
 
-    let qV = supabase.from('ventas').select('id, total, tipo, metodo_pago, fecha, cae').eq('estado', 'completada')
-    let qG = supabase.from('gastos').select('monto, fecha, categorias_gastos(nombre)')
-    let qC = supabase.from('compras').select('id, total, fecha').eq('estado', 'completada')
+    let qV = supabase.from('ventas').select('id, total, tipo, metodo_pago, fecha, cae').eq('comercio_id', perfil.comercio_id).eq('estado', 'completada')
+    let qG = supabase.from('gastos').select('monto, fecha, categorias_gastos(nombre)').eq('comercio_id', perfil.comercio_id)
+    let qC = supabase.from('compras').select('id, total, fecha').eq('comercio_id', perfil.comercio_id).eq('estado', 'completada')
 
     if (desde) { qV = qV.gte('fecha', desde).lte('fecha', hasta) }
     if (desdeDate) {
@@ -439,9 +441,9 @@ export default function Reportes() {
       const antYm = mesAnterior(selMeses[0])
       const { desde: dA, hasta: hA, desdeDate: ddA, hastaDate: hdA } = rangoMes(antYm)
       promesas.push(
-        supabase.from('ventas').select('id, total').eq('estado', 'completada').gte('fecha', dA).lte('fecha', hA),
-        supabase.from('gastos').select('monto').gte('fecha', ddA).lte('fecha', hdA),
-        supabase.from('compras').select('total').eq('estado', 'completada').gte('fecha', ddA).lte('fecha', hdA),
+        supabase.from('ventas').select('id, total').eq('comercio_id', perfil.comercio_id).eq('estado', 'completada').gte('fecha', dA).lte('fecha', hA),
+        supabase.from('gastos').select('monto').eq('comercio_id', perfil.comercio_id).gte('fecha', ddA).lte('fecha', hdA),
+        supabase.from('compras').select('total').eq('comercio_id', perfil.comercio_id).eq('estado', 'completada').gte('fecha', ddA).lte('fecha', hdA),
       )
     }
 
@@ -655,13 +657,11 @@ export default function Reportes() {
       ) : !errorCarga && (
         <>
           {/* Cards resumen */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card label="Ventas" valor={ars(totalVentas)}
               sub={`${ventas.length} transacciones`} color="text-blue-600" bg="bg-blue-50" icono={ShoppingCart}
               actual={totalVentas} anterior={totalVentasAnt} mostrarDelta={mostrarDelta} />
-            <Card label="Ticket promedio" valor={ars(ticketProm)}
-              sub="por venta" color="text-violet-600" bg="bg-violet-50" icono={TrendingUp}
-              actual={ticketProm} anterior={ticketPromAnt} mostrarDelta={mostrarDelta} />
+
             <Card label="Compras" valor={ars(totalCompras)}
               sub={`${compras.length} registros`} color="text-indigo-600" bg="bg-indigo-50" icono={ShoppingBag}
               actual={totalCompras} anterior={totalComprasAnt} mostrarDelta={mostrarDelta} />

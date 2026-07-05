@@ -34,6 +34,9 @@ import AdminDashboard from './pages/admin/index'
 import AdminNegocios from './pages/admin/Negocios'
 import AdminUsuarios from './pages/admin/Usuarios'
 import AdminAjustes from './pages/admin/Ajustes'
+import AdminCobros from './pages/admin/Cobros'
+import AdminGastosPropios from './pages/admin/GastosPropios'
+import AdminFinanzas from './pages/admin/Finanzas'
 import RutaProtegida from './components/RutaProtegida'
 import RutaAdmin from './components/RutaAdmin'
 import RutaSuperAdmin from './components/RutaSuperAdmin'
@@ -135,13 +138,15 @@ export const router = createHashRouter([
       </RutaSuperAdmin>
     ),
     children: [
-      { index: true,          element: <Navigate to="/admin/dashboard" replace /> },
-      { path: 'dashboard',    element: <AdminDashboard /> },
-      { path: 'negocios',     element: <AdminNegocios /> },
-      { path: 'usuarios',     element: <AdminUsuarios /> },
-      { path: 'ajustes',      element: <AdminAjustes />  },
+      { index: true,              element: <Navigate to="/admin/dashboard" replace /> },
+      { path: 'dashboard',        element: <AdminDashboard />    },
+      { path: 'negocios',         element: <AdminNegocios />     },
+      { path: 'usuarios',         element: <AdminUsuarios />     },
+      { path: 'ajustes',          element: <AdminAjustes />      },
+      { path: 'cobros',           element: <AdminCobros />       },
+      { path: 'gastos-propios',   element: <AdminGastosPropios />},
+      { path: 'finanzas',         element: <AdminFinanzas />     },
     ],
   },
-  { path: '/',  element: <Navigate to="/app/dashboard" replace /> },
-  { path: '*',  element: <Navigate to="/app/dashboard" replace /> },
+  { path: "*",  element: <Navigate to="/app/dashboard" replace /> },
 ])

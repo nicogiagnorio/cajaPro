@@ -62,7 +62,11 @@ export function traducirError(error) {
     msg.includes('fetch') ||
     msg.toLowerCase().includes('network') ||
     msg.includes('Failed to fetch') ||
-    msg.includes('ERR_INTERNET')
+    msg.includes('ERR_INTERNET') ||
+    msg.includes('Load failed') ||
+    msg.includes('load failed') ||
+    msg.includes('NetworkError') ||
+    msg.includes('The Internet connection appears to be offline')
   ) {
     return 'Sin conexion. Verifica tu internet e intenta nuevamente.'
   }

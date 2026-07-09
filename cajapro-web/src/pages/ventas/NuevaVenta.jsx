@@ -574,7 +574,7 @@ export default function NuevaVenta() {
       {carrito.length > 0 && !carritoAbierto && (
         <button
           onClick={() => setCarritoAbierto(true)}
-          className="lg:hidden fixed bottom-16 left-3 right-3 z-20 rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 text-white"
+          className="lg:hidden fixed bottom-20 left-3 right-3 z-20 rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 text-white"
           style={{ backgroundColor: tema }}
         >
           <ShoppingCart size={18} />
@@ -589,7 +589,7 @@ export default function NuevaVenta() {
       {/* ── Hoja de carrito: mobile/tablet ── */}
       {carritoAbierto && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30 flex items-end"
+          className="lg:hidden fixed inset-0 bg-black/50 z-50 flex items-end"
           onClick={(e) => { if (e.target === e.currentTarget) setCarritoAbierto(false) }}
         >
           <div className="bg-white rounded-t-2xl w-full max-h-[88vh] flex flex-col">

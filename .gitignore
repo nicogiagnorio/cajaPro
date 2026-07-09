@@ -39,3 +39,10 @@ build/*.pfx
 
 # Vite dev server cache
 vite.config.js.timestamp-*.mjs
+
+# Claude (configuracion local del editor)
+.claude/
+
+# Documentos generados (no son codigo)
+CajaPro_Arquitectura_Tecnica.docx
+CajaPro_Deploy_Vercel.pdf

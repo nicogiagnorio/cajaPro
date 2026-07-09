@@ -1,0 +1,21 @@
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import Spinner from './ui/Spinner'
+
+export default function RutaSuperAdmin({ children }) {
+  const { perfil, cargando } = useAuth()
+
+  if (cargando) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <Spinner size="lg" className="text-violet-400" />
+      </div>
+    )
+  }
+
+  if (perfil?.rol !== 'superadmin') {
+    return <Navigate to="/app/dashboard" replace />
+  }
+
+  return children
+}

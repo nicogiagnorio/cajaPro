@@ -148,6 +148,25 @@ function TablaVentas({ ventas, onCancelar, onActualizar }) {
                         </table>
                       </div>
                     )}
+
+                    {/* Información de factura ARCA */}
+                    {venta.cae && (
+                      <div className="mt-3 pt-3 border-t border-slate-200 space-y-0.5 text-xs">
+                        <p className="font-semibold text-slate-600">
+                          Factura {venta.tipo_factura} #{String(venta.nro_factura ?? 0).padStart(8, '0')}
+                        </p>
+                        <p><span className="text-slate-400">CAE:</span> <span className="font-mono">{venta.cae}</span></p>
+                        {venta.cae_vencimiento && (
+                          <p><span className="text-slate-400">Vto.:</span> {venta.cae_vencimiento}</p>
+                        )}
+                      </div>
+                    )}
+                    {venta.nc_cae && (
+                      <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-amber-700 space-y-0.5">
+                        <p className="font-semibold">NC {venta.nc_tipo_factura} #{String(venta.nc_nro_factura ?? 0).padStart(8, '0')}</p>
+                        <p><span className="text-slate-400">CAE-NC:</span> <span className="font-mono">{venta.nc_cae}</span></p>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}
@@ -173,6 +192,8 @@ function TabDia() {
       .select(`
         id, numero, fecha, total, subtotal, descuento,
         metodo_pago, estado, tipo, notas,
+        cae, nro_factura, tipo_factura, cae_vencimiento,
+        nc_cae, nc_nro_factura, nc_tipo_factura,
         usuarios(nombre)
       `)
       .gte('fecha', desde).lte('fecha', hasta)

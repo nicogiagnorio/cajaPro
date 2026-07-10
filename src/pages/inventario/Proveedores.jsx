@@ -79,7 +79,8 @@ export default function Proveedores() {
   }
 
   async function toggleActivo(prov) {
-    await supabase.from('proveedores').update({ activo: !prov.activo }).eq('id', prov.id)
+    const { error } = await supabase.from('proveedores').update({ activo: !prov.activo }).eq('id', prov.id)
+    if (error) { alert(traducirError(error)); return }
     setProveedores(prev => prev.map(p => p.id === prov.id ? { ...p, activo: !p.activo } : p))
   }
 

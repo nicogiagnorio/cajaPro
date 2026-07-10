@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { traducirError } from '../../lib/errores'
 import { TEMAS } from '../../lib/temas'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
@@ -105,7 +106,8 @@ function ConfigAvanzada({ comercio, refrescarComercio }) {
   const [togglingModulo, setTogglingModulo] = useState(null)
 
   async function cambiarTema(colorTema) {
-    await supabase.from('comercios').update({ color_tema: colorTema }).eq('id', comercio.id)
+    const { error } = await supabase.from('comercios').update({ color_tema: colorTema }).eq('id', comercio.id)
+    if (error) { alert(traducirError(error)); return }
     await refrescarComercio()
   }
 
@@ -246,7 +248,8 @@ export default function Configuracion() {
   async function eliminarImagen(campo) {
     const nombreArchivo = campo === 'logo_url' ? 'logo' : 'banner'
     await supabase.storage.from('imagenes-comercio').remove([`${comercio.id}/${nombreArchivo}`])
-    await supabase.from('comercios').update({ [campo]: null }).eq('id', comercio.id)
+    const { error } = await supabase.from('comercios').update({ [campo]: null }).eq('id', comercio.id)
+    if (error) { alert(traducirError(error)); return }
     await refrescarComercio()
   }
 

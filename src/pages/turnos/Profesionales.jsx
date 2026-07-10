@@ -191,7 +191,8 @@ function HorariosProfesional({ profesionalId }) {
     setError('')
     setGuardando(true)
 
-    await supabase.from('horarios_disponibles').delete().eq('profesional_id', profesionalId)
+    const { error: errDel } = await supabase.from('horarios_disponibles').delete().eq('profesional_id', profesionalId)
+    if (errDel) { setError(traducirError(errDel)); setGuardando(false); return }
 
     const rows = []
     for (const d of semana.filter(d => d.activo)) {
@@ -382,19 +383,19 @@ function Servicios({ comercioId }) {
       duracion_minutos: parseInt(form.duracion_minutos),
       precio:           form.precio ? parseFloat(form.precio) : null,
     }
-    if (editId) {
-      await supabase.from('servicios_turnos').update(payload).eq('id', editId)
-    } else {
-      await supabase.from('servicios_turnos').insert(payload)
-    }
+    const { error } = editId
+      ? await supabase.from('servicios_turnos').update(payload).eq('id', editId)
+      : await supabase.from('servicios_turnos').insert(payload)
+    setGuardando(false)
+    if (error) { alert(traducirError(error)); return }
     setForm({ nombre: '', duracion_minutos: 30, precio: '' })
     setEditId(null)
-    setGuardando(false)
     cargar()
   }
 
   async function archivar(id) {
-    await supabase.from('servicios_turnos').update({ activo: false }).eq('id', id)
+    const { error } = await supabase.from('servicios_turnos').update({ activo: false }).eq('id', id)
+    if (error) { alert(traducirError(error)); return }
     setServicios(prev => prev.filter(s => s.id !== id))
   }
 
@@ -487,19 +488,19 @@ export default function Profesionales() {
 
   async function guardar(form) {
     setGuardando(true)
-    if (editando) {
-      await supabase.from('profesionales').update(form).eq('id', editando.id)
-    } else {
-      await supabase.from('profesionales').insert({ ...form, comercio_id: perfil.comercio_id })
-    }
+    const { error } = editando
+      ? await supabase.from('profesionales').update(form).eq('id', editando.id)
+      : await supabase.from('profesionales').insert({ ...form, comercio_id: perfil.comercio_id })
     setGuardando(false)
+    if (error) { alert(traducirError(error)); return }
     setMostrarForm(false)
     setEditando(null)
     cargar()
   }
 
   async function toggleActivo(prof) {
-    await supabase.from('profesionales').update({ activo: !prof.activo }).eq('id', prof.id)
+    const { error } = await supabase.from('profesionales').update({ activo: !prof.activo }).eq('id', prof.id)
+    if (error) { alert(traducirError(error)); return }
     setProfesionales(prev => prev.map(p => p.id === prof.id ? { ...p, activo: !p.activo } : p))
   }
 

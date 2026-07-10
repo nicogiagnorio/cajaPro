@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import { traducirError } from '../../lib/errores'
 import Spinner from '../../components/ui/Spinner'
 import Button from '../../components/ui/Button'
 
@@ -56,9 +57,10 @@ function TablaVentas({ ventas, onCancelar, onActualizar }) {
   async function cancelar(venta) {
     if (!confirm(`¿Cancelar la venta #${venta.numero ?? venta.id.slice(0, 8)}?`)) return
     setCancelando(venta.id)
-    await supabase.from('ventas').update({ estado: 'cancelada' }).eq('id', venta.id)
-    onActualizar(venta.id, { estado: 'cancelada' })
+    const { error } = await supabase.from('ventas').update({ estado: 'cancelada' }).eq('id', venta.id)
     setCancelando(null)
+    if (error) { alert(traducirError(error)); return }
+    onActualizar(venta.id, { estado: 'cancelada' })
   }
 
   if (ventas.length === 0) {

@@ -139,14 +139,16 @@ export default function CalendarioSemanal() {
           color:       turno.profesionales?.color,
         })
         if (res.ok) {
-          await supabase.from('turnos').update({ google_event_id: res.eventId }).eq('id', turno.id)
+          const { error: errGcal } = await supabase.from('turnos').update({ google_event_id: res.eventId }).eq('id', turno.id)
+        if (errGcal) console.error('No se pudo guardar google_event_id:', errGcal.message)
         }
       }
     }
 
     if (nuevoEstado === 'cancelado' && turno.google_event_id) {
       await googleCal.eliminarEvento(turno.google_event_id)
-      await supabase.from('turnos').update({ google_event_id: null }).eq('id', turno.id)
+      const { error: errGcalNull } = await supabase.from('turnos').update({ google_event_id: null }).eq('id', turno.id)
+      if (errGcalNull) console.error('No se pudo limpiar google_event_id:', errGcalNull.message)
     }
 
     setCambiandoEstado(false)

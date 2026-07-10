@@ -7,6 +7,7 @@ import {
 import { supabase } from '../../lib/supabase'
 import { arca } from '../../lib/arca'
 import { useAuth } from '../../context/AuthContext'
+import { traducirError } from '../../lib/errores'
 import Spinner from '../../components/ui/Spinner'
 import Button from '../../components/ui/Button'
 
@@ -67,10 +68,11 @@ function PanelFacturar({ venta, onExito, onCancelar }) {
       docNro:  docNro ? parseInt(docNro.replace(/\D/g, '')) : 0,
     })
     if (res.ok) {
-      await supabase.from('ventas').update({
+      const { error: errDB } = await supabase.from('ventas').update({
         cae: res.cae, cae_vencimiento: res.caeVencimiento,
         tipo_factura: res.tipoFactura, nro_factura: res.nroFactura, punto_venta: res.puntoVenta,
       }).eq('id', venta.id)
+      if (errDB) { setError(`ARCA emitió el CAE (${res.cae}) pero no se pudo guardar. Anotá el CAE y contactá soporte.`); setLoading(false); return }
       onExito({ cae: res.cae, cae_vencimiento: res.caeVencimiento, tipo_factura: res.tipoFactura, nro_factura: res.nroFactura, punto_venta: res.puntoVenta })
     } else { setError(res.error) }
     setLoading(false)
@@ -127,11 +129,12 @@ function PanelNC({ venta, onExito, onCancelar }) {
       total: venta.total,
     })
     if (res.ok) {
-      await supabase.from('ventas').update({
+      const { error: errDB } = await supabase.from('ventas').update({
         nc_cae: res.cae, nc_nro_factura: res.nroNC,
         nc_tipo_factura: res.tipoNC, nc_punto_venta: res.puntoVenta,
         nc_vencimiento: res.caeVencimiento, nc_fecha: new Date().toISOString(),
       }).eq('id', venta.id)
+      if (errDB) { setError(`ARCA emitió la NC (CAE: ${res.cae}) pero no se pudo guardar. Anotá el CAE y contactá soporte.`); setLoading(false); return }
       onExito({ nc_cae: res.cae, nc_nro_factura: res.nroNC, nc_tipo_factura: res.tipoNC, nc_vencimiento: res.caeVencimiento })
     } else { setError(res.error) }
     setLoading(false)
@@ -186,9 +189,10 @@ function TablaVentas({ ventas, onCancelar, onActualizar }) {
   async function cancelar(venta) {
     if (!confirm(`¿Cancelar la venta #${venta.numero ?? venta.id.slice(0, 8)}?`)) return
     setCancelando(venta.id)
-    await supabase.from('ventas').update({ estado: 'cancelada' }).eq('id', venta.id)
-    onActualizar(venta.id, { estado: 'cancelada' })
+    const { error } = await supabase.from('ventas').update({ estado: 'cancelada' }).eq('id', venta.id)
     setCancelando(null)
+    if (error) { alert(traducirError(error)); return }
+    onActualizar(venta.id, { estado: 'cancelada' })
   }
 
   if (ventas.length === 0) {

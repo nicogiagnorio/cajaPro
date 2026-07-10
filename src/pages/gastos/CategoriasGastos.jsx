@@ -64,7 +64,8 @@ export default function CategoriasGastos() {
   }
 
   async function toggleActivo(cat) {
-    await supabase.from('categorias_gastos').update({ activo: !cat.activo }).eq('id', cat.id)
+    const { error } = await supabase.from('categorias_gastos').update({ activo: !cat.activo }).eq('id', cat.id)
+    if (error) { alert(traducirError(error)); return }
     setCategorias(prev => prev.map(c => c.id === cat.id ? { ...c, activo: !c.activo } : c))
   }
 

@@ -200,7 +200,8 @@ export default function Productos() {
   }
 
   async function toggleActivo(prod) {
-    await supabase.from('productos').update({ activo: !prod.activo }).eq('id', prod.id)
+    const { error } = await supabase.from('productos').update({ activo: !prod.activo }).eq('id', prod.id)
+    if (error) { alert(traducirError(error)); return }
     setProductos(prev => prev.map(p => p.id === prod.id ? { ...p, activo: !p.activo } : p))
   }
 

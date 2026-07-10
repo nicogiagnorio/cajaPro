@@ -4,4 +4,18 @@
 
 * {
   -webkit-app-region: no-drag;
+  user-select: none;
+  cursor: default;
+}
+
+/* Inputs y textareas: cursor de texto y selección habilitada */
+input, textarea, [contenteditable] {
+  user-select: text;
+  cursor: text;
+}
+
+/* Elementos interactivos: cursor pointer */
+button, a, label, select,
+[role="button"], [role="tab"], [role="option"] {
+  cursor: pointer;
 }

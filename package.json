@@ -1,6 +1,6 @@
 {
   "name": "cajapro",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Software de gestión para comercios de barrio",
   "main": "electron/main.cjs",
   "type": "module",

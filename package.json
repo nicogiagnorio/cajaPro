@@ -86,7 +86,7 @@
     "publish": {
       "provider": "github",
       "owner": "nicogiagnorio",
-      "repo": "cajaPro"
+      "repo": "AutomatizacionesAR"
     },
     "nsis": {
       "oneClick": false,

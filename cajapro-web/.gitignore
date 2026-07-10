@@ -2,3 +2,6 @@ node_modules
 dist
 .env
 .env.local
+
+# Vite dev server cache
+vite.config.js.timestamp-*.mjs

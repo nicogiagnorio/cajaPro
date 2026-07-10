@@ -63,7 +63,10 @@ export default function HistorialGastos() {
       .eq('comercio_id', perfil.comercio_id)
       .eq('activo', true)
       .order('nombre')
-      .then(({ data }) => setCategorias(data ?? []))
+      .then(({ data, error }) => {
+        if (error) console.error('categorias_gastos:', error.message)
+        setCategorias(data ?? [])
+      })
   }, [])
 
   async function cargar() {

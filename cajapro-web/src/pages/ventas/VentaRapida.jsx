@@ -43,7 +43,10 @@ export default function VentaRapida() {
       .eq('comercio_id', perfil.comercio_id)
       .eq('activo', true)
       .order('nombre')
-      .then(({ data }) => setCategorias(data ?? []))
+      .then(({ data, error }) => {
+        if (error) console.error('categorias:', error.message)
+        setCategorias(data ?? [])
+      })
 
     supabase
       .from('clientes')
@@ -51,7 +54,10 @@ export default function VentaRapida() {
       .eq('comercio_id', perfil.comercio_id)
       .eq('activo', true)
       .order('nombre')
-      .then(({ data }) => setClientes(data ?? []))
+      .then(({ data, error }) => {
+        if (error) console.error('clientes:', error.message)
+        setClientes(data ?? [])
+      })
   }, [])
 
   async function onSubmit(datos) {

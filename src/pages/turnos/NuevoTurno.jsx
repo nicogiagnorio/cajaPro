@@ -70,7 +70,11 @@ function MiniCalendar({ profesionalId, comercioId, selectedFecha, selectedHoraIn
       .lte('fecha', hasta)
       .neq('estado', 'cancelado')
       .order('hora_inicio')
-      .then(({ data }) => { setTurnos(data ?? []); setCargando(false) })
+      .then(({ data, error }) => {
+        if (error) console.error('turnos:', error.message)
+        setTurnos(data ?? [])
+        setCargando(false)
+      })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profesionalId, semana, comercioId])
 

@@ -13,10 +13,16 @@ export default function AdminDashboard() {
 
   async function cargarStats() {
     setCargando(true)
-    const res = await window.adminAPI.estadisticas()
-    if (!res.ok) { setError(res.error); setCargando(false); return }
-    setStats(res)
-    setCargando(false)
+    try {
+      if (!window.adminAPI?.estadisticas) throw new Error('API no disponible')
+      const res = await window.adminAPI.estadisticas()
+      if (!res.ok) { setError(res.error); return }
+      setStats(res)
+    } catch {
+      setError('No se pudo conectar con el cliente admin. Configurá las credenciales en Ajustes.')
+    } finally {
+      setCargando(false)
+    }
   }
 
   if (error) {

@@ -115,7 +115,7 @@ function ConfigAvanzada({ comercio, refrescarComercio }) {
     setTogglingModulo(key)
     const nuevosModulos = { ...(comercio?.modulos ?? {}), [key]: !habilitado }
     const { error: err } = await supabase.from('comercios').update({ modulos: nuevosModulos }).eq('id', comercio.id)
-    if (err) console.error('toggleModulo error:', err.message)
+    if (err) { alert(traducirError(err)); setTogglingModulo(null); return }
     await refrescarComercio()
     setTogglingModulo(null)
   }

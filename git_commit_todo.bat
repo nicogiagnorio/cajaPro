@@ -35,6 +35,7 @@ git add index.html
 git add public/
 git add scripts/
 git add .gitignore
+git add vercel.json
 git add git_commit_todo.bat
 
 :: Excluir siempre

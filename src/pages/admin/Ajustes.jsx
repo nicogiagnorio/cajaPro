@@ -8,11 +8,12 @@ export default function AdminAjustes() {
   const [msg,       setMsg]       = useState(null) // { ok, texto }
 
   useEffect(() => {
+    if (!window.adminAPI?.cargarConfig) return
     window.adminAPI.cargarConfig().then(res => {
       if (res.ok && res.data) {
         setForm({ supabaseUrl: res.data.supabaseUrl ?? '', serviceRoleKey: res.data.serviceRoleKey ?? '' })
       }
-    })
+    }).catch(() => {}) // silencioso — campos quedan vacíos para ingreso manual
   }, [])
 
   async function guardar(e) {
@@ -23,12 +24,18 @@ export default function AdminAjustes() {
     }
     setGuardando(true)
     setMsg(null)
-    const res = await window.adminAPI.guardarConfig(form)
-    setGuardando(false)
-    setMsg(res.ok
-      ? { ok: true,  texto: 'Configuración guardada correctamente.' }
-      : { ok: false, texto: res.error }
-    )
+    try {
+      if (!window.adminAPI?.guardarConfig) throw new Error('API no disponible')
+      const res = await window.adminAPI.guardarConfig(form)
+      setMsg(res.ok
+        ? { ok: true,  texto: 'Configuración guardada correctamente.' }
+        : { ok: false, texto: res.error }
+      )
+    } catch {
+      setMsg({ ok: false, texto: 'Error interno: reinstalá la aplicación.' })
+    } finally {
+      setGuardando(false)
+    }
   }
 
   return (

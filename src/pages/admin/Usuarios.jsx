@@ -41,14 +41,20 @@ export default function Usuarios() {
 
   async function cargar() {
     setCargando(true)
-    const [resU, resN] = await Promise.all([
-      window.adminAPI.listarUsuarios(),
-      window.adminAPI.listarComercios(),
-    ])
-    if (!resU.ok) { setError(resU.error); setCargando(false); return }
-    setUsuarios(resU.data ?? [])
-    setNegocios(resN.ok ? resN.data : [])
-    setCargando(false)
+    try {
+      if (!window.adminAPI?.listarUsuarios) throw new Error('API no disponible')
+      const [resU, resN] = await Promise.all([
+        window.adminAPI.listarUsuarios(),
+        window.adminAPI.listarComercios(),
+      ])
+      if (!resU.ok) { setError(resU.error); return }
+      setUsuarios(resU.data ?? [])
+      setNegocios(resN.ok ? resN.data : [])
+    } catch {
+      setError('No se pudo conectar con el cliente admin. Configurá las credenciales en Ajustes.')
+    } finally {
+      setCargando(false)
+    }
   }
 
   const filtrados = useMemo(() => {

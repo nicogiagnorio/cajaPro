@@ -48,10 +48,16 @@ export default function Negocios() {
 
   async function cargar() {
     setCargando(true)
-    const res = await window.adminAPI.listarComercios()
-    if (!res.ok) { setError(res.error); setCargando(false); return }
-    setNegocios(res.data)
-    setCargando(false)
+    try {
+      if (!window.adminAPI?.listarComercios) throw new Error('API no disponible')
+      const res = await window.adminAPI.listarComercios()
+      if (!res.ok) { setError(res.error); return }
+      setNegocios(res.data)
+    } catch {
+      setError('No se pudo conectar con el cliente admin. Configurá las credenciales en Ajustes.')
+    } finally {
+      setCargando(false)
+    }
   }
 
   async function toggleExpandido(negocio) {
